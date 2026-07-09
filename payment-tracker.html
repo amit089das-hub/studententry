@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Free tracker - Pathshala coaching centre</title>
+    <title>Fee Tracker - Pathshala</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="text-slate-800 antialiased flex flex-col md:flex-row min-h-screen bg-slate-50">
+    
     <aside class="w-full md:w-64 bg-slate-900 text-slate-200 flex flex-col shadow-xl">
         <div class="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center"><span class="text-xl font-bold text-indigo-400">Pathshala</span></div>
         <nav class="p-4 space-y-1.5 flex-1">
@@ -15,119 +16,157 @@
             <div class="pt-4">
                 <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Management</p>
                 <a href="student-entry.html" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl hover:bg-slate-800 text-sm text-slate-400 hover:text-white"><i class="fa-solid fa-user-plus w-5"></i><span>Student Admission</span></a>
+                <a href="student-list.html" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl hover:bg-slate-800 text-sm text-slate-400 hover:text-white"><i class="fa-solid fa-users w-5"></i><span>Student List</span></a>
                 <a href="payment-tracker.html" class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-indigo-600 text-white text-sm font-semibold shadow-md"><i class="fa-solid fa-money-check-dollar w-5"></i><span>Monthly Payment Tracker</span></a>
+                <a href="batch-control.html" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl hover:bg-slate-800 text-sm text-slate-400 hover:text-white"><i class="fa-solid fa-cubes w-5"></i><span>Batch Management</span></a>
             </div>
         </nav>
     </aside>
 
     <main class="flex-1 p-4 md:p-8 space-y-6">
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center">
-            <div><h1 class="text-xl font-bold text-slate-900">Defaulter & Dues Tracker Console</h1><p class="text-xs text-slate-500 mt-0.5">Identifies un-cleared structural months and handles profile terminations</p></div>
-            <div id="loader" class="text-xs text-indigo-600 font-bold"><i class="fa-solid fa-spinner animate-spin"></i> Analyzing Ledger Maps...</div>
+            <div>
+                <h1 class="text-xl font-bold text-slate-900">Monthly Payment Ledger</h1>
+                <p class="text-xs text-slate-500 mt-0.5">Collect tuition fees or waive off dynamic bills effortlessly</p>
+            </div>
+            <div id="loader" class="text-xs text-indigo-600 font-bold"><i class="fa-solid fa-spinner animate-spin"></i> Synchronization Active...</div>
         </div>
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-sm">
-                    <thead>
-                        <tr class="bg-slate-50 text-slate-400 font-bold border-b text-xs uppercase"><th class="p-4">Student Identity</th><th class="p-4">Rate/Month</th><th class="p-4">Outstanding Months Breakdown</th><th class="p-4">Total Overdue</th><th class="p-4 text-center">Actions</th></tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 font-medium" id="paymentTableBody"></tbody>
-                </table>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400 text-sm"></i>
+                <input type="text" id="trackerSearchInput" oninput="filterTrackerCards()" placeholder="টাইপ করুন স্টুডেন্টের নাম অথবা মোবাইল নম্বর..." class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 font-medium transition-all">
             </div>
         </div>
+
+        <div id="trackerGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
     </main>
 
     <script>
-        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbwQ7znCpKyOcdsQeRSa0ow3vpt9vjuYbex_T3fwc0gdmbM3Ow_sPlLNt-w6Kzi-llk1lw/exec"; 
-        
-        // 📅 ৩ নম্বর রিকোয়ারমেন্ট: ভর্তির তারিখ থেকে ঠিক ১ মাস পার হলে তবেই বকেয়া দেখাবে লজিক
-        function calculateDueMonths(joinDateStr, paidMonths, isPaused) {
-            if (isPaused) return []; // স্টুডেন্ট পজ থাকলে বকেয়া হিসাব হবে না
-
-            const start = new Date(joinDateStr);
-            const end = new Date("2026-07-09"); // আপনার বর্তমান সিস্টেম ডেট
-            const dueMonths = [];
-            
-            let current = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-            const monthsName = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            
-            while (true) {
-                // পরবর্তী মাসের সেই একই ডেট হিসাব করা হচ্ছে (উদা: ৯ জুলাই থেকে ৯ আগস্ট)
-                let nextMonthDate = new Date(current.getFullYear(), current.getMonth() + 1, current.getDate());
-                
-                // যদি আজকের ডেট পরবর্তী মাসের সেই নির্দিষ্ট ডেট পার করে যায়, তবেই আগের মাসটি বকেয়া হবে
-                if (nextMonthDate <= end) {
-                    let mName = monthsName[current.getMonth()] + " " + current.getFullYear();
-                    if (!paidMonths.includes(mName)) {
-                        dueMonths.push(mName);
-                    }
-                    current.setMonth(current.getMonth() + 1);
-                } else {
-                    break;
-                }
-            }
-            return dueMonths;
-        }
+        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbycYxW8-74lwzoKRai9nCSoXfPxIM63mqQ9v_FSuCL9CBCOhHndYmFddbTPgYK1MP8Z/exec";
+        let globalTrackerList = [];
+        const TARGET_DATE = new Date("2026-07-09"); // কারেন্ট সিস্টেম টাইম
 
         function loadPaymentTracker() {
             document.getElementById('loader').classList.remove('hidden');
-            fetch(`${GOOGLE_APP_URL}?action=getStudentsWithPayments`).then(res => res.json()).then(students => {
+            fetch(`${GOOGLE_APP_URL}?action=getStudentsWithPayments`).then(res => res.json()).then(data => {
+                globalTrackerList = data;
                 document.getElementById('loader').classList.add('hidden');
-                const tbody = document.getElementById('paymentTableBody');
-                
-                tbody.innerHTML = students.map(s => {
-                    // লোকাল স্টোরেজ থেকে পজ স্টেট চেক করা হচ্ছে
-                    const isPaused = localStorage.getItem(`paused_${s.mobile}`) === 'true';
-                    
-                    const dueList = calculateDueMonths(s.joinDate, s.paidMonths, isPaused);
-                    const totalDueAmount = dueList.length * Number(s.fee);
-                    
-                    let dueBadges = "";
-                    if (isPaused) {
-                        dueBadges = `<span class="text-amber-600 bg-amber-50 text-xs px-2.5 py-1 rounded-md font-bold border border-amber-200"><i class="fa-solid fa-pause mr-1"></i> Account Paused</span>`;
-                    } else {
-                        dueBadges = dueList.length > 0
-                            ? dueList.map(m => `<span class="bg-rose-50 text-rose-600 text-[11px] font-bold px-2 py-0.5 rounded border border-rose-100 mr-1 mb-1 inline-block">${m}</span>`).join('')
-                            : `<span class="text-emerald-600 bg-emerald-50 text-xs px-2.5 py-1 rounded-md font-bold"><i class="fa-solid fa-circle-check"></i> Account Clear</span>`;
-                    }
-
-                    return `
-                        <tr class="hover:bg-slate-50/50 ${isPaused ? 'opacity-70 bg-slate-50' : ''}">
-                            <td class="p-4"><div class="font-bold text-slate-800">${s.name}</div><div class="text-xs text-slate-400">${s.batch} | ${s.mobile}</div></td>
-                            <td class="p-4 font-bold text-slate-600">₹${s.fee}</td>
-                            <td class="p-4 max-w-xs sm:max-w-md">${dueBadges}</td>
-                            <td class="p-4 font-bold ${totalDueAmount > 0 ? 'text-rose-600' : 'text-emerald-600'}">₹${totalDueAmount}</td>
-                            <td class="p-4 text-center">
-                                <div class="flex items-center justify-center gap-2">
-                                    ${dueList.length > 0 && !isPaused ? `<button onclick="payOldestMonth('${s.mobile}', '${s.name}', '${dueList[0]}', ${s.fee})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-xl transition-all shadow-sm">Recover 1 Month</button>` : `<span class="text-xs text-slate-400 font-bold bg-slate-100 px-2.5 py-1 rounded-xl">${isPaused ? 'Paused' : 'Paid'}</span>`}
-                                    
-                                    <button onclick="togglePauseStudent('${s.mobile}', '${s.name}', ${isPaused})" class="text-xs px-3 py-1.5 rounded-xl transition-all font-bold ${isPaused ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-amber-100 text-amber-700 hover:bg-amber-600 hover:text-white'}">
-                                        ${isPaused ? '<i class="fa-solid fa-play"></i> Resume' : '<i class="fa-solid fa-pause"></i> Pause'}
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>`;
-                }).join('');
+                renderTrackerCards(globalTrackerList);
             });
         }
 
-        // ⏸️ পজ টগল করার ফাংশন
-        function togglePauseStudent(mobile, name, currentStatus) {
-            const actionText = currentStatus ? "পুনরায় চালু (Resume)" : "সাময়িক বন্ধ (Pause)";
-            if(confirm(`আপনি কি নিশ্চিতভাবে "${name}" এর অ্যাকাউন্টটি ${actionText} করতে চান?`)) {
-                localStorage.setItem(`paused_${mobile}`, !currentStatus);
-                alert(`স্টুডেন্ট অ্যাকাউন্টটি সফলভাবে ${currentStatus ? 'চালু' : 'বন্ধ'} করা হয়েছে!`);
-                loadPaymentTracker();
+        function renderTrackerCards(students) {
+            const container = document.getElementById('trackerGrid');
+            if(students.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center p-8 text-xs text-slate-400 font-bold bg-white rounded-2xl border border-dashed border-slate-200">কোনো তথ্য পাওয়া যায়নি।</div>`;
+                return;
             }
+
+            container.innerHTML = students.map(student => {
+                // বকেয়া মাস গণনা
+                let dueMonths = [];
+                let joinDate = new Date(student.joinDate);
+                if (!isNaN(joinDate.getTime())) {
+                    let start = new Date(joinDate.getFullYear(), joinDate.getMonth(), joinDate.getDate());
+                    while (true) {
+                        let nextMonthDate = new Date(start.getFullYear(), start.getMonth() + 1, start.getDate());
+                        if (nextMonthDate <= TARGET_DATE) {
+                            let mName = start.toLocaleString('default', { month: 'long' });
+                            let yName = start.getFullYear();
+                            dueMonths.push(`${mName} ${yName}`);
+                            start.setMonth(start.getMonth() + 1);
+                        } else {
+                            break;
+                        }
+                    }
+                }
+
+                // পেমেন্ট লিস্টের রো বাটন জেনারেট করা
+                let monthRowsHTML = dueMonths.map(month => {
+                    const isPaid = student.paidMonths.includes(month);
+                    if(isPaid) {
+                        return `
+                        <div class="flex justify-between items-center p-2.5 bg-emerald-50 rounded-xl border border-emerald-100 text-xs text-emerald-700 font-bold">
+                            <span><i class="fa-solid fa-circle-check mr-1.5"></i>${month}</span>
+                            <span>Paid ✅</span>
+                        </div>`;
+                    } else {
+                        return `
+                        <div class="flex justify-between items-center p-2.5 bg-slate-50 hover:bg-slate-100/70 rounded-xl border text-xs font-bold transition-all">
+                            <span class="text-slate-600"><i class="fa-solid fa-clock text-slate-400 mr-1.5"></i>${month}</span>
+                            <div class="flex gap-1.5">
+                                <button onclick="commitTuitionPayment('${student.mobile}', '${month}', '${student.fee}', '${student.name}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg transition-all text-[11px] shadow-sm">Pay</button>
+                                <button onclick="waiveTuitionPayment('${student.mobile}', '${month}', '${student.name}')" class="bg-amber-100 hover:bg-amber-600 hover:text-white text-amber-700 px-2.5 py-1 rounded-lg transition-all text-[11px]">Waive</button>
+                            </div>
+                        </div>`;
+                    }
+                }).join('');
+
+                return `
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md flex flex-col justify-between transition-all">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-base leading-snug">${student.name}</h3>
+                                <p class="text-xs font-mono text-slate-400 mt-0.5">${student.mobile}</p>
+                            </div>
+                            <span class="bg-indigo-50 text-indigo-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">${student.batch}</span>
+                        </div>
+                        <div class="bg-slate-50/50 p-2 rounded-xl flex justify-between items-center text-xs font-bold border border-slate-100">
+                            <span class="text-slate-400">Monthly Tuition Cost:</span>
+                            <span class="text-slate-800">₹${student.fee}/-</span>
+                        </div>
+                        <div class="space-y-1.5">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Billing Breakdown</p>
+                            ${monthRowsHTML || '<p class="text-xs text-emerald-600 font-bold bg-emerald-50 p-3 rounded-xl border border-emerald-100"><i class="fa-solid fa-smile mr-1"></i> No outstanding tuition bills generated!</p>'}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
         }
 
-        function payOldestMonth(mobile, name, targetMonthYear, fee) {
-            if(confirm(`Accept INR ${fee} from ${name} for oldest default month: "${targetMonthYear}"?`)) {
+        // 🔍 লাইভ সার্চ ফিল্টার
+        function filterTrackerCards() {
+            const term = document.getElementById('trackerSearchInput').value.toLowerCase().trim();
+            const filtered = globalTrackerList.filter(s => 
+                s.name.toLowerCase().includes(term) || s.mobile.toString().includes(term)
+            );
+            renderTrackerCards(filtered);
+        }
+
+        // 💸 সাধারণ পেমেন্ট সাবমিট
+        function commitTuitionPayment(mobile, targetMonthYear, fee, name) {
+            if(confirm(`আপনি কি "${name}" এর "${targetMonthYear}" মাসের ₹${fee} টাকা ফি রিসিভ করেছেন?`)) {
                 document.getElementById('loader').classList.remove('hidden');
                 fetch(GOOGLE_APP_URL, {
                     method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ action: "submitPayment", mobile: mobile, month: targetMonthYear.split(" ")[0], year: targetMonthYear.split(" ")[1], amount: fee, name: name })
-                }).then(() => { alert("Ledger item committed! ✅"); loadPaymentTracker(); });
+                }).then(() => { alert("পেমেন্ট সফলভাবে জমা হয়েছে! ✅"); loadPaymentTracker(); });
+            }
+        }
+
+        // 🎁 বিল মওকুফ (Waive) করার নতুন জাভাস্ক্রিপ্ট ফাংশন
+        function waiveTuitionPayment(mobile, targetMonthYear, name) {
+            if(confirm(`আপনি কি নিশ্চিতভাবে "${name}" এর "${targetMonthYear}" মাসের মাইনে সম্পূর্ণ মওকুফ (Wave off) করতে চান?\nএর ফলে এই মাসের বিল ০ (Zero) টাকা হিসেবে পেইড হয়ে যাবে।`)) {
+                document.getElementById('loader').classList.remove('hidden');
+                
+                // ব্যাকএন্ডে অ্যামাউন্ট হিসেবে ০ (Zero) পাঠানো হচ্ছে
+                fetch(GOOGLE_APP_URL, {
+                    method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                        action: "submitPayment", 
+                        mobile: mobile, 
+                        month: targetMonthYear.split(" ")[0], 
+                        year: targetMonthYear.split(" ")[1], 
+                        amount: 0, // মওকুফের কারণে টাকা ০ জমা হবে 
+                        name: name 
+                    })
+                }).then(() => { 
+                    alert(`"${name}" এর "${targetMonthYear}" মাসের মাইনে সফলভাবে মওকুফ করা হয়েছে! 🎁`); 
+                    loadPaymentTracker(); 
+                });
             }
         }
 
