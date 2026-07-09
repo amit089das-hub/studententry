@@ -1,6 +1,6 @@
 {
   "short_name": "Pathshala",
-  "name": "Pathshala coaching centre",
+  "name": "Pathshala - Tuition Management App",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2997/2997300.png",
@@ -13,7 +13,8 @@
       "sizes": "512x512"
     }
   ],
-  "start_url": "/index.html",
+  "start_url": "./index.html",
+  "scope": "./",
   "background_color": "#0f172a",
   "theme_color": "#4f46e5",
   "display": "standalone",
