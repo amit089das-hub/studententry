@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - EduManager Pro</title>
+    <title>Pathshala coaching centre</title>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4f46e5">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="text-slate-800 antialiased flex flex-col md:flex-row min-h-screen bg-slate-50">
+
+    <!-- 📊 SIDEBAR NAVIGATION -->
     <aside class="w-full md:w-64 bg-slate-900 text-slate-200 flex flex-col shadow-xl">
-        <div class="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center"><span class="text-xl font-bold text-indigo-400">EduManager Pro</span></div>
+        <div class="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center"><span class="text-xl font-bold text-indigo-400">Pathshala</span></div>
         <nav class="p-4 space-y-1.5 flex-1">
             <a href="dashboard.html" class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-indigo-600 text-white text-sm font-semibold shadow-md"><i class="fa-solid fa-chart-pie w-5"></i><span>Dashboard</span></a>
             <div class="pt-4">
@@ -22,64 +27,260 @@
         </nav>
     </aside>
 
+    <!-- 💻 MAIN INTERFACE -->
     <main class="flex-1 p-4 md:p-8 space-y-6">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-sm gap-4">
-            <div><h1 class="text-2xl font-bold text-slate-900">Welcome, Administrator 👋</h1><p class="text-xs text-slate-500 mt-0.5">Real-time valuation engine</p></div>
-            <div id="syncStatus" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-4 py-2 rounded-xl"><i class="fa-solid fa-refresh animate-spin mr-1"></i> Calculating Ledger...</div>
+        
+        <!-- TOP HEADER WITH COUNTER STATS -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div><p class="text-xs font-bold text-slate-400 uppercase">Active Students</p><h2 id="statActive" class="text-2xl font-bold text-slate-900 mt-1">0</h2></div>
+                <div class="w-12 h-12 bg-indigo-50 text-indigo-600 flex items-center justify-center rounded-xl text-lg font-bold"><i class="fa-solid fa-graduation-cap"></i></div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div><p class="text-xs font-bold text-slate-400 uppercase">Total Collected</p><h2 id="statCollected" class="text-2xl font-bold text-emerald-600 mt-1">₹0</h2></div>
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 flex items-center justify-center rounded-xl text-lg font-bold"><i class="fa-solid fa-wallet"></i></div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div><p class="text-xs font-bold text-slate-400 uppercase">Total Outstanding Due</p><h2 id="statDue" class="text-2xl font-bold text-rose-600 mt-1">₹0</h2></div>
+                <div class="w-12 h-12 bg-rose-50 text-rose-600 flex items-center justify-center rounded-xl text-lg font-bold"><i class="fa-solid fa-clock-history"></i></div>
+            </div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider"><i class="fa-solid fa-magnifying-glass mr-1"></i> Global Student Smart Search</label>
+        <!-- 🔍 LIVE ADVANCED SEARCH SECTION -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div>
+                <h3 class="text-base font-bold text-slate-900">Search Student Ledger & Financial Dues</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Type name or mobile number to fetch remaining dues with instant action</p>
+            </div>
             <div class="relative">
-                <input type="text" id="dashboardSearchInput" oninput="executeSearchLookup()" placeholder="Search by Student Name or Mobile Number..." class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
-                <div class="absolute left-3 top-3.5 text-slate-400"><i class="fa-solid fa-magnifying-glass"></i></div>
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400 text-sm"></i>
+                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Start typing student name or mobile number..." class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 font-medium transition-all">
+                <div id="searchLoader" class="absolute right-4 top-3.5 text-indigo-600 text-sm hidden"><i class="fa-solid fa-spinner animate-spin"></i></div>
             </div>
-            <div id="searchDropdownResult" class="bg-white border rounded-xl shadow-lg max-h-60 overflow-y-auto divide-y hidden"></div>
+
+            <!-- SEARCH RESULTS CONSOLE -->
+            <div id="searchResults" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden pt-2">
+                <!-- dynamic cards injection point -->
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-                <div><span class="text-xs font-bold text-slate-400 uppercase">Active Enrolments</span><div id="activeCount" class="text-3xl font-bold text-slate-900 mt-1">0 Students</div></div>
-                <div class="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-user-check"></i></div>
-            </div>
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-                <div><span class="text-xs font-bold text-slate-400 uppercase">Total Collected</span><div id="totalColl" class="text-3xl font-bold text-indigo-600 mt-1">INR 0</div></div>
-                <div class="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-wallet"></i></div>
-            </div>
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-                <div><span class="text-xs font-bold text-slate-400 uppercase">Outstanding Dues</span><div id="totalDue" class="text-3xl font-bold text-rose-600 mt-1">INR 0</div></div>
-                <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-circle-exclamation"></i></div>
-            </div>
+        <!-- BATCH DISTRIBUTION REPORT -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div><h3 class="text-base font-bold text-slate-900">Batch Wise Distribution</h3><p class="text-xs text-slate-400 mt-0.5">Real-time student allocations per batch matrix</p></div>
+            <div id="batchReportContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
         </div>
     </main>
 
-    <script>
-        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbw-3F1QFEmbOqmVxhs8Q0btUUweu14qh0lZ4OWn0EYIXmQDP9iDYRYp5cSaPvLHnYe0Jw/exec"; // <-- এখানে নতুন Deployment URL বসান
-        let globalStudentsArray = [];
+    <!-- 📝 QUICK PROFILE EDIT MODAL (নাম, মোবাইল এবং নতুন মান্থলি ফি সহ) -->
+    <div id="editModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-slate-200">
+            <h3 class="text-lg font-bold text-slate-900 mb-4"><i class="fa-solid fa-user-gear text-indigo-600 mr-2"></i>Edit Student Profile</h3>
+            <input type="hidden" id="editOldMobile">
+            <input type="hidden" id="editBatch">
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Student Name</label>
+                    <input type="text" id="editName" class="w-full px-4 py-2 border rounded-xl text-sm focus:outline-indigo-600 font-semibold">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Mobile Number</label>
+                    <input type="text" id="editMobile" class="w-full px-4 py-2 border rounded-xl text-sm font-mono focus:outline-indigo-600">
+                </div>
+                <!-- 💰 ড্যাশবোর্ডে নতুন মান্থলি ফি এডিট এর অপশন -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Monthly Fee (₹)</label>
+                    <input type="number" id="editFee" class="w-full px-4 py-2 border rounded-xl text-sm font-bold text-slate-700 focus:outline-indigo-600">
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="closeEditModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">Cancel</button>
+                <button onclick="submitStudentEdit()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md">Save Changes</button>
+            </div>
+        </div>
+    </div>
 
+    <script>
+        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbwQ7znCpKyOcdsQeRSa0ow3vpt9vjuYbex_T3fwc0gdmbM3Ow_sPlLNt-w6Kzi-llk1lw/exec";
+        let globalStudentsList = [];
+        const TARGET_DATE = new Date("2026-07-09"); // আপনার বর্তমান সিস্টেম ডেট
+
+        // 🚀 INITIAL BOOTLOADER
         window.addEventListener('DOMContentLoaded', () => {
-            fetch(`${GOOGLE_APP_URL}?action=getGlobalDashboardReport`).then(res => res.json()).then(data => {
-                document.getElementById('activeCount').innerText = data.activeStudents + " Active";
-                document.getElementById('totalColl').innerText = "₹" + data.totalCollected;
-                document.getElementById('totalDue').innerText = "₹" + data.totalDue;
-                document.getElementById('syncStatus').className = "text-xs bg-emerald-50 text-emerald-600 font-bold px-4 py-2 rounded-xl";
-                document.getElementById('syncStatus').innerHTML = "<i class='fa-solid fa-check-circle'></i> Cloud Sync Active";
-            });
-            fetch(`${GOOGLE_APP_URL}?action=getStudentsWithPayments`).then(res => res.json()).then(studs => { globalStudentsArray = studs; });
+            fetchDashboardStats();
+            fetchBatchReport();
+            preloadStudentsCache();
         });
 
-        function executeSearchLookup() {
-            const input = document.getElementById('dashboardSearchInput').value.toLowerCase().trim();
-            const box = document.getElementById('searchDropdownResult');
-            if(input.length === 0) { box.classList.add('hidden'); return; }
-            const filtered = globalStudentsArray.filter(s => s.name.toLowerCase().includes(input) || s.mobile.toString().includes(input));
-            if(filtered.length === 0) { box.innerHTML = `<div class="p-3 text-slate-400 text-xs">No records correspond to search query.</div>`; box.classList.remove('hidden'); return; }
-            box.innerHTML = filtered.map(s => `
-                <div class="p-3 hover:bg-indigo-50/60 cursor-pointer flex justify-between items-center transition-all">
-                    <div><span class="font-bold text-slate-800">${s.name}</span><span class="text-[11px] text-slate-400 ml-2">(${s.batch})</span></div>
-                    <div class="text-[11px] text-slate-500 font-bold font-mono">Date: ${s.joinDate} <i class="fa-solid fa-calendar ml-1 text-slate-300"></i></div>
-                </div>`).join('');
-            box.classList.remove('hidden');
+        function fetchDashboardStats() {
+            fetch(`${GOOGLE_APP_URL}?action=getGlobalDashboardReport`).then(res => res.json()).then(data => {
+                document.getElementById('statActive').innerText = data.activeStudents;
+                document.getElementById('statCollected').innerText = "₹" + data.totalCollected;
+                document.getElementById('statDue').innerText = "₹" + data.totalDue;
+            });
+        }
+
+        function fetchBatchReport() {
+            fetch(`${GOOGLE_APP_URL}?action=getBatchReport`).then(res => res.json()).then(data => {
+                const container = document.getElementById('batchReportContainer');
+                container.innerHTML = data.map(b => `
+                    <div class="p-4 bg-slate-50 border rounded-xl text-center">
+                        <p class="text-xs font-bold text-slate-400 truncate">${b.name}</p>
+                        <h4 class="text-xl font-black text-slate-800 mt-1">${b.count} <span class="text-xs font-normal text-slate-500">Students</span></h4>
+                    </div>`).join('');
+            });
+        }
+
+        function preloadStudentsCache() {
+            document.getElementById('searchLoader').classList.remove('hidden');
+            fetch(`${GOOGLE_APP_URL}?action=getStudentsWithPayments`).then(res => res.json()).then(data => {
+                globalStudentsList = data;
+                document.getElementById('searchLoader').classList.add('hidden');
+            });
+        }
+
+        // 🔍 LIVE SEARCH ENGINE + LIVE DUE CALCULATOR
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const resultsBox = document.getElementById('searchResults');
+            
+            if(!query) { resultsBox.innerHTML = ""; resultsBox.classList.add('hidden'); return; }
+            
+            const filtered = globalStudentsList.filter(s => 
+                s.name.toLowerCase().includes(query) || s.mobile.toString().includes(query)
+            );
+
+            if(filtered.length === 0) {
+                resultsBox.innerHTML = `<div class="col-span-full text-center p-6 text-xs font-bold text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">No matching active student profiles found!</div>`;
+                resultsBox.classList.remove('hidden');
+                return;
+            }
+
+            resultsBox.innerHTML = filtered.map(student => {
+                let dueMonths = [];
+                let joinDate = new Date(student.joinDate);
+                
+                if (!isNaN(joinDate.getTime())) {
+                    let start = new Date(joinDate.getFullYear(), joinDate.getMonth(), joinDate.getDate());
+                    
+                    while (true) {
+                        let nextMonthDate = new Date(start.getFullYear(), start.getMonth() + 1, start.getDate());
+                        if (nextMonthDate <= TARGET_DATE) {
+                            let mName = start.toLocaleString('default', { month: 'long' });
+                            let yName = start.getFullYear();
+                            dueMonths.push(`${mName} ${yName}`);
+                            start.setMonth(start.getMonth() + 1);
+                        } else {
+                            break;
+                        }
+                    }
+                }
+
+                let pendingMonths = dueMonths.filter(m => !student.paidMonths.includes(m));
+                let duesCount = pendingMonths.length;
+                let totalDuesAmount = duesCount * student.fee;
+
+                return `
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col justify-between hover:shadow-md transition-all">
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="font-bold text-slate-900 text-base">${student.name}</h4>
+                                    <p class="text-xs text-slate-500 font-mono mt-0.5"><i class="fa-solid fa-phone text-slate-400 mr-1"></i>${student.mobile}</p>
+                                </div>
+                                <span class="bg-indigo-50 text-indigo-600 text-[11px] font-bold px-2.5 py-1 rounded-md">${student.batch}</span>
+                            </div>
+                            
+                            <div class="bg-white border rounded-xl p-3 flex justify-between text-xs font-bold">
+                                <span class="text-slate-400">Monthly Fee:</span>
+                                <span class="text-indigo-600">₹${student.fee}/-</span>
+                            </div>
+
+                            <div class="bg-white border rounded-xl p-3 space-y-1.5">
+                                <div class="flex justify-between text-xs font-bold">
+                                    <span class="text-slate-400">Outstanding Dues:</span>
+                                    <span class="${totalDuesAmount > 0 ? 'text-rose-600' : 'text-emerald-600'}">₹${totalDuesAmount}/- (${duesCount} Months)</span>
+                                </div>
+                                ${duesCount > 0 ? `
+                                <div class="text-[11px] text-rose-500 font-semibold bg-rose-50/50 p-2 rounded-lg border border-rose-100 leading-relaxed">
+                                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> <strong>Baki Months:</strong> ${pendingMonths.join(', ')}
+                                </div>` : `<div class="text-[11px] text-emerald-600 font-semibold bg-emerald-50/50 p-2 rounded-lg border border-emerald-100"><i class="fa-solid fa-circle-check mr-1"></i> All tuition bills cleared!</div>`}
+                            </div>
+                        </div>
+
+                        <!-- 🛠️ এডিট এবং ডিলিট অ্যাকশন বাটনসমূহ (Fee সহ পাঠানো হলো) -->
+                        <div class="flex gap-2 mt-4 pt-3 border-t border-slate-200/60">
+                            <button onclick="openEditModal('${student.mobile}', '${student.name}', '${student.batch}', '${student.fee}')" class="flex-1 bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white font-bold text-xs py-2 rounded-xl transition-all text-center"><i class="fa-solid fa-pen mr-1"></i> Edit Profile</button>
+                            <button onclick="deleteStudentProfile('${student.mobile}', '${student.name}')" class="flex-1 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-xs py-2 rounded-xl transition-all text-center"><i class="fa-solid fa-trash mr-1"></i> Delete Student</button>
+                        </div>
+                    </div>`;
+            }).join('');
+            resultsBox.classList.remove('hidden');
+        }
+
+        // 📝 MODAL LOGIC FOR LIVE DASHBOARD EDIT (Fee যুক্ত করা হয়েছে)
+        function openEditModal(mobile, name, batch, fee) {
+            document.getElementById('editOldMobile').value = mobile;
+            document.getElementById('editName').value = name;
+            document.getElementById('editMobile').value = mobile;
+            document.getElementById('editBatch').value = batch;
+            document.getElementById('editFee').value = fee; // কারেন্ট ফি বক্সে শো করবে
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
+
+        function submitStudentEdit() {
+            const oldMobile = document.getElementById('editOldMobile').value;
+            const newName = document.getElementById('editName').value;
+            const newMobile = document.getElementById('editMobile').value;
+            const batch = document.getElementById('editBatch').value;
+            const newFee = document.getElementById('editFee').value;
+
+            if(!newName || !newMobile || !newFee) { alert("সবগুলো বক্স সঠিকভাবে পূরণ করুন।"); return; }
+            closeEditModal();
+            document.getElementById('searchLoader').classList.remove('hidden');
+
+            fetch(GOOGLE_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    action: "updateStudentProfile", 
+                    oldMobile: oldMobile, 
+                    newMobile: newMobile, 
+                    name: newName, 
+                    batch: batch, 
+                    fee: newFee // নতুন ফি গুগল শিটে সাবমিট হবে
+                })
+            }).then(() => {
+                alert("স্টুডেন্টের প্রোফাইল ও মান্থলি ফি সফলভাবে আপডেট হয়েছে! ✅");
+                document.getElementById('searchInput').value = "";
+                handleSearch();
+                preloadStudentsCache();
+                fetchDashboardStats();
+            });
+        }
+
+        // 🗑️ INLINE DELETE LOGIC
+        function deleteStudentProfile(mobile, name) {
+            if(confirm(`আপনি কি ড্যাশবোর্ড থেকে সরাসরি "${name}"-কে ডিলিট করতে চান?\nগুগল শিটের 'Students' ও 'Payments' হিস্ট্রি থেকে সম্পূর্ণ ডাটা ডিলেট হবে!`)) {
+                document.getElementById('searchLoader').classList.remove('hidden');
+                fetch(GOOGLE_APP_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "deleteStudent", mobile: mobile })
+                }).then(() => {
+                    alert(`"${name}" এর সব রেকর্ড সফলভাবে ডাটাবেজ থেকে ডিলেট হয়েছে। ✅`);
+                    document.getElementById('searchInput').value = "";
+                    handleSearch();
+                    preloadStudentsCache();
+                    fetchDashboardStats();
+                    fetchBatchReport();
+                });
+            }
         }
     </script>
 </body>
