@@ -6,10 +6,23 @@
     <title>Dashboard - Pathshala</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Hind Siliguri', sans-serif; }
+    </style>
 </head>
 <body class="text-slate-800 antialiased flex flex-col md:flex-row min-h-screen bg-slate-50">
 
-    <!-- 📊 SIDEBAR -->
+    <link class="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+
+    <div id="globalActionLoader" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-white p-5 rounded-2xl shadow-xl flex flex-col items-center gap-3">
+            <div class="h-10 w-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-sm font-bold text-slate-700">অনুরোধ প্রসেস হচ্ছে, দয়া করে অপেক্ষা করুন...</p>
+        </div>
+    </div>
+
     <aside class="w-full md:w-64 bg-slate-900 text-slate-200 flex flex-col shadow-xl">
         <div class="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center"><span class="text-xl font-bold text-indigo-400">Pathshala</span></div>
         <nav class="p-4 space-y-1.5 flex-1">
@@ -24,204 +37,381 @@
         </nav>
     </aside>
 
-    <!-- 💻 MAIN CORE -->
     <main class="flex-1 p-4 md:p-8 space-y-6">
-        <div class="flex justify-between items-center">
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div><p class="text-xs font-bold text-slate-400 uppercase">Active Students</p><h2 id="statActive" class="text-2xl font-bold text-slate-900 mt-1">0</h2></div>
+                <div class="w-12 h-12 bg-indigo-50 text-indigo-600 flex items-center justify-center rounded-xl text-lg font-bold"><i class="fa-solid fa-graduation-cap"></i></div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div><p class="text-xs font-bold text-slate-400 uppercase">Monthly Collected</p><h2 id="statMonthly" class="text-2xl font-bold text-indigo-600 mt-1">₹0</h2></div>
+                <div class="w-12 h-12 bg-indigo-50 text-indigo-600 flex items-center justify-center rounded-xl text-lg font-bold"><i class="fa-solid fa-calendar-day"></i></div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div><p class="text-xs font-bold text-slate-400 uppercase">Yearly Collected</p><h2 id="statYearly" class="text-2xl font-bold text-blue-600 mt-1">₹0</h2></div>
+                <div class="w-12 h-12 bg-blue-50 text-blue-600 flex items-center justify-center rounded-xl text-lg font-bold"><i class="fa-solid fa-wallet"></i></div>
+            </div>
+            
+            <div onclick="openDueDefaultersModal()" class="bg-white p-5 rounded-2xl border border-rose-200 shadow-sm flex items-center justify-between cursor-pointer hover:bg-rose-50/40 transition-all group">
+                <div>
+                    <p class="text-xs font-bold text-rose-500 uppercase tracking-wide">Total Outstanding Due ⬀</p>
+                    <h2 id="statDue" class="text-2xl font-bold text-rose-600 mt-1">₹0</h2>
+                    <p class="text-[10px] text-slate-400 mt-0.5 group-hover:text-rose-600 transition-all font-medium">Click to view Batch-wise Defaulters</p>
+                </div>
+                <div class="w-12 h-12 bg-rose-50 group-hover:bg-rose-600 group-hover:text-white text-rose-600 flex items-center justify-center rounded-xl text-lg font-bold transition-all"><i class="fa-solid fa-clock-history"></i></div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <div>
-                <h1 class="text-xl font-black text-slate-900 tracking-tight md:text-2xl">Pathshala HQ Analytics</h1>
-                <p class="text-xs text-slate-400 font-medium mt-0.5">Click any batch card below to view, edit, or pause students inside it</p>
+                <h3 class="text-base font-bold text-slate-900">Search Student Ledger & Financial Dues</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Type name or mobile number to fetch remaining dues with instant action</p>
             </div>
-            <div id="loader" class="text-indigo-600 text-sm font-bold hidden"><i class="fa-solid fa-spinner animate-spin mr-2"></i>Syncing...</div>
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400 text-sm"></i>
+                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Start typing student name or mobile number..." class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 font-medium transition-all">
+                <div id="searchLoader" class="absolute right-4 top-3.5 text-indigo-600 text-sm hidden"><i class="fa-solid fa-spinner animate-spin"></i></div>
+            </div>
+            <div id="searchResults" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden pt-2"></div>
         </div>
 
-        <!-- 📈 STATS COUNTERS -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-                <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Active Roster</p><h3 id="statActive" class="text-2xl font-black text-slate-900 mt-1">0</h3></div>
-                <div class="h-12 w-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600"><i class="fa-solid fa-user-check text-lg"></i></div>
-            </div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-                <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Total Revenue</p><h3 id="statCollected" class="text-2xl font-black text-slate-900 mt-1">₹0</h3></div>
-                <div class="h-12 w-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600"><i class="fa-solid fa-wallet text-lg"></i></div>
-            </div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-                <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Outstanding Dues</p><h3 id="statDue" class="text-2xl font-black text-rose-600 mt-1">₹0</h3></div>
-                <div class="h-12 w-12 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600"><i class="fa-solid fa-triangle-exclamation text-lg"></i></div>
-            </div>
-        </div>
-
-        <!-- 📦 BATCHES DISTRIBUTION MATRIX -->
-        <div>
-            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Live Batch Classes</h2>
-            <div id="batchContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Cards render here dynamically -->
-            </div>
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div><h3 class="text-base font-bold text-slate-900">Batch Wise Distribution</h3><p class="text-xs text-slate-400 mt-0.5">Real-time student allocations per batch matrix (Click card to view profiles)</p></div>
+            <div id="batchReportContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
         </div>
     </main>
 
-    <!-- 👥 SPECIFIC BATCH STUDENTS POPUP MODAL -->
-    <div id="batchModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-40">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-4xl shadow-2xl border flex flex-col max-h-[85vh]">
-            <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h3 id="modalBatchTitle" class="text-lg font-black text-slate-900">Batch Class Roll</h3>
-                <button onclick="closeBatchModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+    <div id="batchDetailsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-40">
+        <div class="bg-white rounded-2xl w-full max-w-3xl max-h-[80vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+            <div class="p-5 bg-indigo-600 text-white flex justify-between items-center shadow-md">
+                <div>
+                    <h3 id="batchModalTitle" class="text-lg font-bold">Batch Profile List</h3>
+                    <p id="batchModalSub" class="text-xs opacity-90">All active/paused roster tracking</p>
+                </div>
+                <button onclick="closeBatchDetailsModal()" class="bg-indigo-700 hover:bg-indigo-800 text-white w-9 h-9 flex items-center justify-center rounded-xl transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <div class="overflow-y-auto flex-1">
-                <table class="w-full text-left text-sm font-medium">
-                    <thead>
-                        <tr class="bg-slate-50 text-slate-400 text-xs font-bold uppercase border-b">
-                            <th class="p-3">Name</th>
-                            <th class="p-3">Mobile</th>
-                            <th class="p-3">Monthly Fee</th>
-                            <th class="p-3 text-center">Status</th>
-                            <th class="p-3 text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="batchModalTableBody" class="divide-y text-slate-700">
-                        <!-- Dynamic list -->
-                    </tbody>
-                </table>
+            <div class="p-4 overflow-y-auto bg-slate-50 flex-1">
+                <div class="bg-white border rounded-xl overflow-hidden shadow-2xs">
+                    <table class="min-w-full divide-y divide-slate-200 text-left text-xs sm:text-sm">
+                        <thead class="bg-slate-50 font-bold text-slate-500 uppercase text-[10px] tracking-wider">
+                            <tr>
+                                <th class="px-4 py-3">Student Name</th>
+                                <th class="px-4 py-3">Mobile No</th>
+                                <th class="px-4 py-3">Fee</th>
+                                <th class="px-4 py-3 text-center">Status</th>
+                                <th class="px-4 py-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="batchModalTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- 📝 INNER PROFILE EDIT MODAL -->
-    <div id="editModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
-            <h3 class="text-md font-bold text-slate-900 mb-4"><i class="fa-solid fa-user-gear text-indigo-600 mr-2"></i>Modify Student Profile</h3>
+    <div id="editModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-slate-200">
+            <h3 class="text-lg font-bold text-slate-900 mb-4"><i class="fa-solid fa-user-gear text-indigo-600 mr-2"></i>Edit Student Profile</h3>
             <input type="hidden" id="editOldMobile">
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Student Name</label>
-                    <input type="text" id="editName" class="w-full px-4 py-2 border rounded-xl text-sm font-semibold">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Student Name</label>
+                    <input type="text" id="editName" class="w-full px-4 py-2 border rounded-xl text-sm focus:outline-indigo-600 font-semibold">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Mobile Number</label>
-                    <input type="text" id="editMobile" class="w-full px-4 py-2 border rounded-xl text-sm font-mono">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Mobile Number</label>
+                    <input type="text" id="editMobile" class="w-full px-4 py-2 border rounded-xl text-sm font-mono focus:outline-indigo-600">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Select New Batch</label>
-                    <select id="editBatch" class="w-full px-4 py-2 border rounded-xl text-sm font-semibold bg-white">
-                        <!-- Loaded -->
-                    </select>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Select New Batch</label>
+                    <select id="editBatch" class="w-full px-4 py-2 border rounded-xl text-sm font-semibold bg-white focus:outline-indigo-600"></select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Monthly Fee (₹)</label>
-                    <input type="number" id="editFee" class="w-full px-4 py-2 border rounded-xl text-sm font-bold">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Monthly Fee (₹)</label>
+                    <input type="number" id="editFee" class="w-full px-4 py-2 border rounded-xl text-sm font-bold text-slate-700 focus:outline-indigo-600">
                 </div>
             </div>
             <div class="flex justify-end gap-2 mt-6">
-                <button onclick="closeEditModal()" class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl">Cancel</button>
-                <button onclick="submitStudentEdit()" class="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl shadow-md">Save Changes</button>
+                <button onclick="closeEditModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">Cancel</button>
+                <button onclick="submitStudentEdit()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md">Save Changes</button>
             </div>
+        </div>
+    </div>
+
+    <div id="defaultersModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-md hidden flex items-center justify-center p-4 z-40">
+        <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[85vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+            <div class="p-5 bg-rose-600 text-white flex justify-between items-center shadow-md">
+                <div>
+                    <h3 class="text-lg font-bold"><i class="fa-solid fa-receipt mr-2"></i>Batch-Wise Dues & Outstanding Summary</h3>
+                    <p class="text-xs opacity-90">Showing students with generated pending bills</p>
+                </div>
+                <button onclick="closeDueDefaultersModal()" class="bg-rose-700 hover:bg-rose-800 text-white w-9 h-9 flex items-center justify-center rounded-xl transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-6 bg-slate-50/50 flex-1" id="defaultersModalBody"></div>
         </div>
     </div>
 
     <script>
-        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbyQZwbOTE-f0Ybl-nZjgGlLFRKC0vWIqe4KB3F3HaThorI8GFM5uBwigePrrs532fY/exec";
-        let allStudents = [];
-        let allBatches = [];
-        let currentActiveBatchName = "";
+        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbweSITsBr61gVkfjLpJd0GJovPDf-kSVuS-iUTIRbhfy_4Eel1sUPQfp2EaHqPdDep8/exec";
+        let globalStudentsList = [];
+        let globalBatchesList = []; 
+        const TARGET_DATE = new Date("2026-07-09"); 
 
         window.addEventListener('DOMContentLoaded', () => {
             fetchDashboardStats();
-            loadMasterData();
+            fetchBatchReport();
+            preloadStudentsCache();
+            preloadBatches(); 
         });
 
+        function showActionLoader() { document.getElementById('globalActionLoader').classList.remove('hidden'); }
+        function hideActionLoader() { document.getElementById('globalActionLoader').classList.add('hidden'); }
+
         function fetchDashboardStats() {
-            document.getElementById('loader').classList.remove('hidden');
             fetch(`${GOOGLE_APP_URL}?action=getGlobalDashboardReport`).then(res => res.json()).then(data => {
                 document.getElementById('statActive').innerText = data.activeStudents;
-                document.getElementById('statCollected').innerText = `₹${data.totalCollected}`;
-                document.getElementById('statDue').innerText = `₹${data.totalDue}`;
+                document.getElementById('statMonthly').innerText = "₹" + (data.monthlyCollected || 0);
+                document.getElementById('statYearly').innerText = "₹" + (data.yearlyCollected || 0);
+                document.getElementById('statDue').innerText = "₹" + data.totalDue;
             });
         }
 
-        function loadMasterData() {
-            Promise.all([
-                fetch(`${GOOGLE_APP_URL}?action=getBatches`).then(res => res.json()),
-                fetch(`${GOOGLE_APP_URL}?action=getStudentsWithPayments`).then(res => res.json())
-            ]).then(([batches, students]) => {
-                allBatches = batches;
-                allStudents = students;
-                renderBatchCards();
-                document.getElementById('loader').classList.add('hidden');
+        // 🔄 ব্যাচ রিপোর্ট জেনারেটর (কার্ডগুলোকে ক্লিকেবল করা হয়েছে)
+        function fetchBatchReport() {
+            fetch(`${GOOGLE_APP_URL}?action=getBatchReport`).then(res => res.json()).then(data => {
+                const container = document.getElementById('batchReportContainer');
+                container.innerHTML = data.map(b => `
+                    <div onclick="openBatchDetailsModal('${b.name}')" class="p-4 bg-white border border-slate-200 rounded-xl text-center shadow-2xs hover:border-indigo-400 hover:bg-indigo-50/20 cursor-pointer transition-all group">
+                        <p class="text-xs font-bold text-slate-400 truncate group-hover:text-indigo-600">${b.name}</p>
+                        <h4 class="text-xl font-black text-slate-800 mt-1">${b.count} <span class="text-xs font-normal text-slate-500">Students</span></h4>
+                        <p class="text-[9px] text-indigo-500 underline opacity-0 group-hover:opacity-100 transition-all mt-0.5">Click to view list</p>
+                    </div>`).join('');
             });
         }
 
-        function renderBatchCards() {
-            const container = document.getElementById('batchContainer');
-            container.innerHTML = allBatches.map(bName => {
-                // পজ বা অ্যাক্টিভ নির্বিশেষে ওই ব্যাচের টোটাল কতজন স্টুডেন্ট আছে তা গোনা হচ্ছে
-                const count = allStudents.filter(s => s.batch === bName).length;
-                return `
-                <div onclick="openBatchModal('${bName}')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-indigo-500 hover:shadow-md transition-all cursor-pointer flex justify-between items-center group">
-                    <div>
-                        <h4 class="font-bold text-slate-900 group-hover:text-indigo-600">${bName}</h4>
-                        <p class="text-xs font-semibold text-slate-400 mt-1">${count} Registered Pupils</p>
-                    </div>
-                    <div class="text-slate-300 group-hover:text-indigo-500 transition-colors"><i class="fa-solid fa-chevron-right"></i></div>
-                </div>`;
-            }).join('');
+        function preloadStudentsCache() {
+            document.getElementById('searchLoader').classList.remove('hidden');
+            fetch(`${GOOGLE_APP_URL}?action=getStudentsWithPayments`).then(res => res.json()).then(data => {
+                globalStudentsList = data;
+                document.getElementById('searchLoader').classList.add('hidden');
+            });
         }
 
-        function openBatchModal(batchName) {
-            currentActiveBatchName = batchName;
-            document.getElementById('modalBatchTitle').innerText = `${batchName} - Student Directory`;
-            renderBatchModalList();
-            document.getElementById('batchModal').classList.remove('hidden');
+        function preloadBatches() {
+            fetch(`${GOOGLE_APP_URL}?action=getBatches`).then(res => res.json()).then(data => {
+                globalBatchesList = data;
+            });
         }
 
-        function closeBatchModal() { document.getElementById('batchModal').classList.add('hidden'); }
+        function calculateDueReport(student) {
+            let dueMonths = [];
+            let joinDate = new Date(student.joinDate);
+            if (!isNaN(joinDate.getTime())) {
+                let start = new Date(joinDate.getFullYear(), joinDate.getMonth(), joinDate.getDate());
+                while (true) {
+                    let nextMonthDate = new Date(start.getFullYear(), start.getMonth() + 1, start.getDate());
+                    if (nextMonthDate <= TARGET_DATE) {
+                        let mName = start.toLocaleString('default', { month: 'long' });
+                        let yName = start.getFullYear();
+                        dueMonths.push(`${mName} ${yName}`);
+                        start.setMonth(start.getMonth() + 1);
+                    } else {
+                        break;
+                    }
+                }
+            }
+            let pendingMonths = dueMonths.filter(m => !student.paidMonths.includes(m));
+            return {
+                pendingMonths: pendingMonths,
+                duesCount: pendingMonths.length,
+                totalDuesAmount: pendingMonths.length * student.fee
+            };
+        }
 
-        function renderBatchModalList() {
-            const filtered = allStudents.filter(s => s.batch === currentActiveBatchName);
+        // 🎯 ব্যাচ ওয়াইজ স্টুডেন্ট উইন্ডো পপআপ ওপেন করার মূল ইঞ্জিন
+        function openBatchDetailsModal(batchName) {
+            document.getElementById('batchModalTitle').innerText = `${batchName} - Student Roster`;
             const tbody = document.getElementById('batchModalTableBody');
+            tbody.innerHTML = "";
+
+            const filteredStudents = globalStudentsList.filter(s => s.batch === batchName);
+
+            if (filteredStudents.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400 font-bold">No registered students found in this batch.</td></tr>`;
+            } else {
+                filteredStudents.forEach(s => {
+                    const isPaused = s.status === "Paused";
+                    const statusBadge = isPaused 
+                        ? `<span class="px-2 py-0.5 bg-rose-50 text-rose-600 text-[10px] font-bold rounded border border-rose-100">Paused</span>`
+                        : `<span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded border border-emerald-100">Active</span>`;
+
+                    const actionToggleBtn = isPaused
+                        ? `<button onclick="toggleStudentStatus('${s.mobile}', 'Active', '${s.name}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded transition-all shadow-3xs"><i class="fa-solid fa-play mr-0.5"></i> Resume</button>`
+                        : `<button onclick="toggleStudentStatus('${s.mobile}', 'Paused', '${s.name}')" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-bold rounded transition-all shadow-3xs"><i class="fa-solid fa-pause mr-0.5"></i> Pause</button>`;
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition-all";
+                    tr.innerHTML = `
+                        <td class="px-4 py-3 font-bold text-slate-900">${s.name}</td>
+                        <td class="px-4 py-3 font-mono text-slate-500 text-xs">${s.mobile}</td>
+                        <td class="px-4 py-3 font-semibold text-slate-700">₹${s.fee}</td>
+                        <td class="px-4 py-3 text-center">${statusBadge}</td>
+                        <td class="px-4 py-3 text-right flex justify-end gap-2 items-center">
+                            <button onclick="closeBatchDetailsModal(); openEditModal('${s.mobile}', '${s.name}', '${s.batch}', '${s.fee}')" class="p-1.5 bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white rounded transition-all" title="Edit Profile"><i class="fa-solid fa-pen text-xs"></i></button>
+                            ${actionToggleBtn}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+            document.getElementById('batchDetailsModal').classList.remove('hidden');
+        }
+
+        function closeBatchDetailsModal() { document.getElementById('batchDetailsModal').classList.add('hidden'); }
+
+        // ⚙️ লাইভ পজ বা রিজিউম করার ব্যাকএন্ড সিঙ্ক এপিআই কল
+        function toggleStudentStatus(mobile, nextStatus, name) {
+            if(confirm(`আপনি কি নিশ্চিতভাবে "${name}" এর স্ট্যাটাস পরিবর্তন করে "${nextStatus}" করতে চান?`)) {
+                closeBatchDetailsModal();
+                showActionLoader();
+                
+                fetch(GOOGLE_APP_URL, {
+                    method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "togglePauseStudent", mobile: mobile, status: nextStatus })
+                }).then(() => {
+                    alert(`"${name}" এর প্রোফাইল সফলভাবে ${nextStatus} মোডে সেট হয়েছে! 🚀`);
+                    reloadEverything();
+                    hideActionLoader();
+                }).catch(err => { console.error(err); hideActionLoader(); });
+            }
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const resultsBox = document.getElementById('searchResults');
+            if(!query) { resultsBox.innerHTML = ""; resultsBox.classList.add('hidden'); return; }
             
+            const filtered = globalStudentsList.filter(s => s.name.toLowerCase().includes(query) || s.mobile.toString().includes(query));
             if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center font-bold text-slate-400 uppercase text-xs">No students registered in this batch.</td></tr>`;
+                resultsBox.innerHTML = `<div class="col-span-full text-center p-6 text-xs font-bold text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">No matching active student profiles found!</div>`;
+                resultsBox.classList.remove('hidden');
                 return;
             }
 
-            tbody.innerHTML = filtered.map(s => {
-                const isActive = s.status === "Active";
+            resultsBox.innerHTML = filtered.map(student => {
+                let dueReport = calculateDueReport(student);
                 return `
-                <tr class="hover:bg-slate-50/50">
-                    <td class="p-3 font-bold text-slate-900">${s.name}</td>
-                    <td class="p-3 font-mono text-xs">${s.mobile}</td>
-                    <td class="p-3 font-semibold">₹${s.fee}/-</td>
-                    <td class="p-3 text-center">
-                        <span class="px-2 py-0.5 rounded-md text-xs font-bold ${isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}">
-                            ${s.status || 'Active'}
-                        </span>
-                    </td>
-                    <td class="p-3 text-center flex justify-center gap-2">
-                        <button onclick="togglePause('${s.mobile}', '${s.status}')" class="px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${isActive ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-500 hover:text-white' : 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-500 hover:text-white'}">
-                            <i class="fa-solid ${isActive ? 'fa-pause' : 'fa-play'}"></i> ${isActive ? 'Pause' : 'Resume'}
-                        </button>
-                        <button onclick="openEditModal('${s.mobile}', '${s.name}', '${s.batch}', '${s.fee}')" class="bg-slate-100 hover:bg-indigo-600 text-slate-600 hover:text-white px-2.5 py-1 rounded-lg text-xs font-bold transition-all"><i class="fa-solid fa-pen"></i> Edit</button>
-                    </td>
-                </tr>`;
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col justify-between hover:shadow-md transition-all">
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="font-bold text-slate-900 text-base">${student.name}</h4>
+                                    <p class="text-xs text-slate-500 font-mono mt-0.5"><i class="fa-solid fa-phone text-slate-400 mr-1"></i>${student.mobile}</p>
+                                </div>
+                                <span class="bg-indigo-50 text-indigo-600 text-[11px] font-bold px-2.5 py-1 rounded-md">${student.batch}</span>
+                            </div>
+                            <div class="bg-white border rounded-xl p-3 flex justify-between text-xs font-bold">
+                                <span class="text-slate-400">Monthly Fee:</span>
+                                <span class="text-indigo-600">₹${student.fee}/-</span>
+                            </div>
+                            <div class="bg-white border rounded-xl p-3 space-y-1.5">
+                                <div class="flex justify-between text-xs font-bold">
+                                    <span class="text-slate-400">Outstanding Dues:</span>
+                                    <span class="${dueReport.totalDuesAmount > 0 ? 'text-rose-600' : 'text-emerald-600'}">₹${dueReport.totalDuesAmount}/- (${dueReport.duesCount} Months)</span>
+                                </div>
+                                ${dueReport.duesCount > 0 ? `<div class="text-[11px] text-rose-500 font-semibold bg-rose-50/50 p-2 rounded-lg border border-rose-100 leading-relaxed"><strong>Baki:</strong> ${dueReport.pendingMonths.join(', ')}</div>` : `<div class="text-[11px] text-emerald-600 font-semibold bg-emerald-50/50 p-2 rounded-lg border border-emerald-100">Bills cleared!</div>`}
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mt-4 pt-3 border-t border-slate-200/60">
+                            <button onclick="openEditModal('${student.mobile}', '${student.name}', '${student.batch}', '${student.fee}')" class="flex-1 bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white font-bold text-xs py-2 rounded-xl transition-all text-center"><i class="fa-solid fa-pen mr-1"></i> Edit / Change Batch</button>
+                            <button onclick="deleteStudentProfile('${student.mobile}', '${student.name}')" class="flex-1 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-xs py-2 rounded-xl transition-all text-center"><i class="fa-solid fa-trash mr-1"></i> Delete</button>
+                        </div>
+                    </div>`;
             }).join('');
+            resultsBox.classList.remove('hidden');
         }
 
-        function togglePause(mobile, currentStatus) {
-            const targetStatus = (currentStatus === "Paused") ? "Active" : "Paused";
-            document.getElementById('loader').classList.remove('hidden');
-            
-            fetch(GOOGLE_APP_URL, {
-                method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "togglePauseStudent", mobile: mobile, status: targetStatus })
-            }).then(() => {
-                alert(`স্টুডেন্ট সফলভাবে ${targetStatus === 'Active' ? 'চালু (Active) হয়েছে এবং আজ থেকে নতুন ফি মাস শুরু হলো' : 'পজ (Paused) করা হয়েছে'}! ✅`);
-                // রিয়েল-টাইমে রিফ্রেশ
-                fetch(`${GOOGLE_APP_URL}?action=getStudentsWithPayments`).then(res => res.json()).then(students => {
-                    allStudents = students;
-                    renderBatchModalList();
-                    renderBatchCards();
-                    fetchDashboardStats();
-                });
+        function openDueDefaultersModal() {
+            const body = document.getElementById('defaultersModalBody');
+            body.innerHTML = `<div class="text-center p-6 text-sm text-slate-500 font-semibold"><i class="fa-solid fa-spinner animate-spin mr-2 text-rose-600"></i>Sorting and grouping dues matrix...</div>`;
+            document.getElementById('defaultersModal').classList.remove('hidden');
+
+            let defaulters = globalStudentsList.map(s => {
+                return { ...s, dueReport: calculateDueReport(s) };
+            }).filter(s => s.dueReport.totalDuesAmount > 0);
+
+            if(defaulters.length === 0) {
+                body.innerHTML = `<div class="text-center p-12 text-slate-400 font-bold bg-white rounded-2xl border border-dashed">Great news! ✅ 100% tuition dues cleared across all batches!</div>`;
+                return;
+            }
+
+            let batchGroups = {};
+            defaulters.forEach(s => {
+                if(!batchGroups[s.batch]) batchGroups[s.batch] = [];
+                batchGroups[s.batch].push(s);
             });
+
+            let html = "";
+            for (let batchName in batchGroups) {
+                html += `
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="bg-slate-100 px-5 py-3 border-b border-slate-200 flex justify-between items-center">
+                        <span class="font-black text-slate-700 uppercase tracking-wider text-xs"><i class="fa-solid fa-cubes text-indigo-500 mr-2"></i>${batchName}</span>
+                        <span class="bg-rose-100 text-rose-700 text-[11px] font-black px-2.5 py-0.5 rounded-full">${batchGroups[batchName].length} Students Pending</span>
+                    </div>
+                    <div class="divide-y divide-slate-100">
+                        ${batchGroups[batchName].map(s => `
+                        <div class="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-slate-50/50 transition-all">
+                            <div>
+                                <h5 class="font-bold text-slate-900 text-sm">${s.name}</h5>
+                                <p class="text-xs text-slate-400 font-mono mt-0.5">${s.mobile} | <span class="text-rose-600 font-bold">₹${s.dueReport.totalDuesAmount} Due</span></p>
+                            </div>
+                            <div class="w-full sm:w-auto flex flex-wrap gap-2">
+                                ${s.dueReport.pendingMonths.map(month => `
+                                <div class="bg-slate-50 border rounded-lg px-2.5 py-1 flex items-center gap-2 text-[11px] font-bold">
+                                    <span class="text-slate-600">${month}</span>
+                                    <button onclick="inlineProcessPayment('${s.mobile}', '${month}', '${s.fee}', '${s.name}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-0.5 rounded text-[10px] transition-all">Pay</button>
+                                    <button onclick="inlineProcessWaive('${s.mobile}', '${month}', '${s.name}')" class="bg-amber-100 hover:bg-amber-600 hover:text-white text-amber-700 px-2 py-0.5 rounded text-[10px] transition-all">Waive</button>
+                                </div>`).join('')}
+                            </div>
+                        </div>`).join('')}
+                    </div>
+                </div>`;
+            }
+            body.innerHTML = html;
+        }
+
+        function closeDueDefaultersModal() { document.getElementById('defaultersModal').classList.add('hidden'); }
+
+        function inlineProcessPayment(mobile, targetMonthYear, fee, name) {
+            if(confirm(`আপনি কি "${name}" এর "${targetMonthYear}" মাসের ₹${fee} টাকা ফি রিসিভ করেছেন?`)) {
+                closeDueDefaultersModal();
+                showActionLoader();
+                fetch(GOOGLE_APP_URL, {
+                    method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "submitPayment", mobile: mobile, month: targetMonthYear.split(" ")[0], year: targetMonthYear.split(" ")[1], amount: fee, name: name })
+                }).then(() => { alert("পেমেন্ট সফলভাবে জমা হয়েছে! ✅"); reloadEverything(); hideActionLoader(); }).catch(() => hideActionLoader());
+            }
+        }
+
+        function inlineProcessWaive(mobile, targetMonthYear, name) {
+            if(confirm(`আপনি কি নিশ্চিতভাবে "${name}" এর "${targetMonthYear}" মাসের বিল সম্পূর্ণ মওকুф করতে চান?`)) {
+                closeDueDefaultersModal();
+                showActionLoader();
+                fetch(GOOGLE_APP_URL, {
+                    method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "submitPayment", mobile: mobile, month: targetMonthYear.split(" ")[0], year: targetMonthYear.split(" ")[1], amount: 0, name: name })
+                }).then(() => { alert(`"${name}" এর "${targetMonthYear}" মাসের মাইনে মওকুফ করা হয়েছে! 🎁`); reloadEverything(); hideActionLoader(); }).catch(() => hideActionLoader());
+            }
+        }
+
+        function reloadEverything() {
+            document.getElementById('searchInput').value = "";
+            handleSearch();
+            preloadStudentsCache();
+            fetchDashboardStats();
+            fetchBatchReport();
         }
 
         function openEditModal(mobile, name, batch, fee) {
@@ -230,41 +420,48 @@
             document.getElementById('editMobile').value = mobile;
             document.getElementById('editFee').value = fee;
             
-            const select = document.getElementById('editBatch');
-            select.innerHTML = allBatches.map(b => `<option value="${b}" ${b === batch ? 'selected' : ''}>${b}</option>`).join('');
+            const batchSelect = document.getElementById('editBatch');
+            batchSelect.innerHTML = globalBatchesList.map(bName => `
+                <option value="${bName}" ${bName === batch ? 'selected' : ''}>${bName}</option>
+            `).join('');
+
             document.getElementById('editModal').classList.remove('hidden');
         }
-
+        
         function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
 
         function submitStudentEdit() {
             const oldMobile = document.getElementById('editOldMobile').value;
             const newName = document.getElementById('editName').value;
             const newMobile = document.getElementById('editMobile').value;
-            const selectBatch = document.getElementById('editBatch').value;
+            const selectBatch = document.getElementById('editBatch').value; 
             const newFee = document.getElementById('editFee').value;
 
+            if(!newName || !newMobile || !newFee || !selectBatch) { alert("সবগুলো বক্স সঠিকভাবে পূরণ করুন।"); return; }
             closeEditModal();
-            document.getElementById('loader').classList.remove('hidden');
+            showActionLoader();
 
             fetch(GOOGLE_APP_URL, {
                 method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "updateStudentProfile", oldMobile: oldMobile, newMobile: newMobile, name: newName, batch: selectBatch, fee: newFee })
-            }).then(() => {
-                alert("প্রোফাইল সাকসেসফুলি আপডেট হয়েছে! ✅");
-                // লাইভ রিফ্রেশ
-                fetch(`${GOOGLE_APP_URL}?action=getStudentsWithPayments`).then(res => res.json()).then(students => {
-                    allStudents = students;
-                    if(selectBatch !== currentActiveBatchName) {
-                        // যদি ব্যাচ চেঞ্জ হয়ে যায়, পপআপ থেকে স্টুডেন্ট অন্য ব্যাচে চলে যাবে
-                        renderBatchModalList();
-                    } else {
-                        renderBatchModalList();
-                    }
-                    renderBatchCards();
-                    fetchDashboardStats();
-                });
-            });
+                body: JSON.stringify({ 
+                    action: "updateStudentProfile", 
+                    oldMobile: oldMobile, 
+                    newMobile: newMobile, 
+                    name: newName, 
+                    batch: selectBatch, 
+                    fee: newFee 
+                })
+            }).then(() => { alert("স্টুডেন্টের প্রোফাইল ও ব্যাচ সফলভাবে পরিবর্তন হয়েছে! ✅"); reloadEverything(); hideActionLoader(); }).catch(() => hideActionLoader());
+        }
+
+        function deleteStudentProfile(mobile, name) {
+            if(confirm(`আপনি কি ড্যাশবোর্ড থেকে সরাসরি "${name}"-কে ডিলিট করতে চান?`)) {
+                showActionLoader();
+                fetch(GOOGLE_APP_URL, {
+                    method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "deleteStudent", mobile: mobile })
+                }).then(() => { alert(`"${name}" এর রেকর্ড মুছে ফেলা হয়েছে। ✅`); reloadEverything(); hideActionLoader(); }).catch(() => hideActionLoader());
+            }
         }
     </script>
 </body>
