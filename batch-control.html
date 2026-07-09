@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batches - EduManager Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="text-slate-800 antialiased flex flex-col md:flex-row min-h-screen bg-slate-50">
+    <aside class="w-full md:w-64 bg-slate-900 text-slate-200 flex flex-col shadow-xl">
+        <div class="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center"><span class="text-xl font-bold text-indigo-400">EduManager Pro</span></div>
+        <nav class="p-4 space-y-1.5 flex-1">
+            <a href="dashboard.html" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl hover:bg-slate-800 text-sm text-slate-400 hover:text-white"><i class="fa-solid fa-chart-pie w-5"></i><span>Dashboard</span></a>
+            <div class="pt-4">
+                <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Management</p>
+                <a href="student-entry.html" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl hover:bg-slate-800 text-sm text-slate-400 hover:text-white"><i class="fa-solid fa-user-plus w-5"></i><span>Student Admission</span></a>
+                <a href="payment-tracker.html" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl hover:bg-slate-800 text-sm text-slate-400 hover:text-white"><i class="fa-solid fa-money-check-dollar w-5"></i><span>Monthly Payment Tracker</span></a>
+                <a href="batch-control.html" class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-indigo-600 text-white text-sm font-semibold shadow-md"><i class="fa-solid fa-cubes w-5"></i><span>Batch Management</span></a>
+            </div>
+        </nav>
+    </aside>
+
+    <main class="flex-1 p-4 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-1 space-y-6">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <h2 class="text-md font-bold text-slate-900 mb-4" id="formTitle">Create Batch Node</h2>
+                <form id="batchForm" class="space-y-4">
+                    <input type="hidden" id="oldBatchName">
+                    <input type="text" id="batchName" required placeholder="Class 12 Advanced" class="w-full px-3 py-2 bg-slate-50 border rounded-xl text-sm outline-none">
+                    <div class="flex gap-2">
+                        <button type="submit" id="submitBtn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-xl text-xs">Commit Cluster</button>
+                        <button type="button" id="cancelEditBtn" onclick="resetFormState()" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-2 px-3 rounded-xl text-xs">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <h2 class="text-md font-bold text-slate-900 mb-1">Merge Batches Pipeline</h2>
+                <p class="text-[11px] text-slate-400 mb-4">Combines two source clusters into a single new node seamlessly.</p>
+                <form id="mergeForm" class="space-y-4">
+                    <div><label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Source Cluster A</label><select id="mergeBatchA" class="w-full px-3 py-2 bg-slate-50 border rounded-xl text-xs outline-none"></select></div>
+                    <div><label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Source Cluster B</label><select id="mergeBatchB" class="w-full px-3 py-2 bg-slate-50 border rounded-xl text-xs outline-none"></select></div>
+                    <div><label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Target New Batch Name</label><input type="text" id="newMergedBatchName" required placeholder="Combined Batch Alpha" class="w-full px-3 py-2 bg-slate-50 border rounded-xl text-xs outline-none"></div>
+                    <button type="submit" id="mergeBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-xs shadow-sm"><i class="fa-solid fa-code-merge mr-1"></i> Combine & Auto-Migrate Students</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-5 border-b font-bold text-slate-800 flex justify-between items-center"><span>Active Batch Node Roster</span><span id="loader" class="text-xs text-indigo-600 font-medium hidden"><i class="fa-solid fa-spinner animate-spin"></i> Loading...</span></div>
+            <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-slate-400 font-bold border-b text-xs uppercase text-left"><th class="p-4">Batch Name</th><th class="p-4">Total Enrollment</th><th class="p-4 text-center">Actions</th></tr></thead><tbody id="batchTableBody" class="divide-y"></tbody></table></div>
+        </div>
+    </main>
+
+    <script>
+        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbw-3F1QFEmbOqmVxhs8Q0btUUweu14qh0lZ4OWn0EYIXmQDP9iDYRYp5cSaPvLHnYe0Jw/exec"; // <-- Put your Live Apps Script Web App URL here
+        let isEditMode = false;
+
+        function loadBatches() {
+            document.getElementById('loader').classList.remove('hidden');
+            fetch(`${GOOGLE_APP_URL}?action=getBatchReport`).then(res => res.json()).then(data => {
+                document.getElementById('loader').classList.add('hidden');
+                
+                // Populate Dropdowns for Merging
+                const options = data.map(b => `<option value="${b.name}">${b.name} (${b.count} Studs)</option>`).join('');
+                document.getElementById('mergeBatchA').innerHTML = options;
+                document.getElementById('mergeBatchB').innerHTML = options;
+
+                document.getElementById('batchTableBody').innerHTML = data.map(b => `
+                    <tr class="hover:bg-slate-50/50">
+                        <td class="p-4 font-bold text-slate-800">${b.name}</td>
+                        <td class="p-4 text-indigo-600 font-bold"><i class="fa-solid fa-users mr-1"></i> ${b.count} Enrolled</td>
+                        <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="triggerEditState('${b.name}')" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white text-xs px-2.5 py-1.5 rounded-xl transition-all"><i class="fa-solid fa-pencil"></i></button>
+                                <button onclick="deleteBatchNode('${b.name}', ${b.count})" class="bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white text-xs px-2.5 py-1.5 rounded-xl transition-all"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>`).join('');
+            });
+        }
+
+        document.getElementById('batchForm').addEventListener('submit', function(e){
+            e.preventDefault();
+            const targetBtn = document.getElementById('submitBtn'); targetBtn.innerText = "Processing..."; targetBtn.disabled = true;
+            const payload = isEditMode ? { action: "editBatch", oldBatchName: document.getElementById('oldBatchName').value, newBatchName: document.getElementById('batchName').value } : { action: "addBatch", batchName: document.getElementById('batchName').value };
+            fetch(GOOGLE_APP_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then(() => { alert(isEditMode ? "Batch updated! ✅" : "Batch generated! ✅"); resetFormState(); loadBatches(); });
+        });
+
+        // 🔀 HANDLE BATCH MERGE SUBMIT
+        document.getElementById('mergeForm').addEventListener('submit', function(e){
+            e.preventDefault();
+            const bA = document.getElementById('mergeBatchA').value;
+            const bB = document.getElementById('mergeBatchB').value;
+            const targetNew = document.getElementById('newMergedBatchName').value;
+
+            if(bA === bB) { alert("Error: Source Batch A and Batch B cannot be identical!"); return; }
+
+            if(confirm(`Are you sure you want to merge "${bA}" and "${bB}" into "${targetNew}"?\nAll students from both batches will automatically transition to the new batch, and old batches will be eliminated.`)) {
+                const btn = document.getElementById('mergeBtn'); btn.innerText = "Merging Matrix Layers..."; btn.disabled = true;
+                fetch(GOOGLE_APP_URL, {
+                    method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "mergeBatches", batchA: bA, batchB: bB, newBatchName: targetNew })
+                }).then(() => {
+                    alert(`Batches successfully integrated into "${targetNew}"! All student pipelines updated. ✅`);
+                    document.getElementById('mergeForm').reset();
+                    btn.innerHTML = `<i class="fa-solid fa-code-merge mr-1"></i> Combine & Auto-Migrate Students`; btn.disabled = false;
+                    loadBatches();
+                });
+            }
+        });
+
+        function triggerEditState(batchName) {
+            isEditMode = true; document.getElementById('formTitle').innerText = "Modify Batch Node"; document.getElementById('submitBtn').innerText = "Update Cluster Name"; document.getElementById('oldBatchName').value = batchName; document.getElementById('batchName').value = batchName; document.getElementById('cancelEditBtn').classList.remove('hidden');
+        }
+        function resetFormState() {
+            isEditMode = false; document.getElementById('formTitle').innerText = "Create Batch Node"; document.getElementById('submitBtn').innerText = "Commit Cluster"; document.getElementById('submitBtn').disabled = false; document.getElementById('batchForm').reset(); document.getElementById('cancelEditBtn').classList.add('hidden');
+        }
+        function deleteBatchNode(batchName, studentCount) {
+            if (studentCount > 0) { alert(`CRITICAL REJECTION!\nCannot delete "${batchName}" because it currently has ${studentCount} active students.`); return; }
+            if(confirm(`Delete batch "${batchName}" permanently?`)) { document.getElementById('loader').classList.remove('hidden'); fetch(GOOGLE_APP_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "deleteBatch", batchName: batchName }) }).then(() => { alert("Batch deleted! ✅"); loadBatches(); }); }
+        }
+        window.addEventListener('DOMContentLoaded', loadBatches);
+    </script>
+</body>
+</html>

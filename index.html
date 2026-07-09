@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - EduManager Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/10 shadow-2xl text-center">
+        <div class="mb-6">
+            <div class="w-16 h-16 bg-indigo-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg mb-3">
+                <i class="fa-solid fa-graduation-cap text-3xl text-white"></i>
+            </div>
+            <h1 class="text-xl font-bold text-white tracking-wide">EduManager Pro</h1>
+            <p class="text-xs text-slate-400 mt-1">Authorized Access Only</p>
+        </div>
+        <button onclick="loginWithFingerprint()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-2xl shadow-lg transition-all flex items-center justify-center space-x-2 text-sm mb-4">
+            <i class="fa-solid fa-fingerprint text-xl"></i><span>Access with Biometric</span>
+        </button>
+        <div class="relative my-6"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-white/10"></div></div><div class="relative flex justify-center text-xs uppercase"><span class="bg-slate-900 px-3 text-slate-400">Or use Master PIN</span></div></div>
+        <form id="pinForm" class="space-y-4">
+            <input type="password" id="masterPin" required placeholder="Enter Security PIN" class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-2xl text-sm text-center font-mono text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
+            <p id="errorMsg" class="text-xs text-red-400 font-semibold hidden"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Invalid Security PIN!</p>
+            <div class="flex gap-2">
+                <button type="submit" class="flex-1 bg-white/10 hover:bg-white/20 text-white font-semibold py-2 rounded-xl border border-white/10 text-xs">Login</button>
+                <button type="button" onclick="setupFingerprint()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-xl text-xs">Register Biometric</button>
+            </div>
+        </form>
+    </div>
+    <script>
+        const MASTER_PIN = "Soumitra#2026";
+        function setupFingerprint() {
+            if (document.getElementById('masterPin').value === MASTER_PIN) { localStorage.setItem('fingerprint_setup', 'true'); alert("Biometric registered successfully! ✅"); }
+            else { alert("Provide correct PIN to map biometric."); }
+        }
+        function loginWithFingerprint() {
+            if (localStorage.getItem('fingerprint_setup')) { window.location.href = "dashboard.html"; }
+            else { alert("Please setup biometric authentication first using Master PIN."); }
+        }
+        document.getElementById('pinForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (document.getElementById('masterPin').value === MASTER_PIN) { window.location.href = "dashboard.html"; }
+            else { document.getElementById('errorMsg').classList.remove('hidden'); }
+        });
+    </script>
+</body>
+</html>
