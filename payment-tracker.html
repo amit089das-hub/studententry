@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Free tracker - Pathshala coaching centre</title>
+    <title>Fee Tracker - EduManager Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="text-slate-800 antialiased flex flex-col md:flex-row min-h-screen bg-slate-50">
     <aside class="w-full md:w-64 bg-slate-900 text-slate-200 flex flex-col shadow-xl">
-        <div class="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center"><span class="text-xl font-bold text-indigo-400">Pathshala</span></div>
+        <div class="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center"><span class="text-xl font-bold text-indigo-400">EduManager Pro</span></div>
         <nav class="p-4 space-y-1.5 flex-1">
             <a href="dashboard.html" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl hover:bg-slate-800 text-sm text-slate-400 hover:text-white"><i class="fa-solid fa-chart-pie w-5"></i><span>Dashboard</span></a>
             <div class="pt-4">
@@ -38,33 +38,18 @@
     </main>
 
     <script>
-        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbwQ7znCpKyOcdsQeRSa0ow3vpt9vjuYbex_T3fwc0gdmbM3Ow_sPlLNt-w6Kzi-llk1lw/exec"; 
+        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbw-3F1QFEmbOqmVxhs8Q0btUUweu14qh0lZ4OWn0EYIXmQDP9iDYRYp5cSaPvLHnYe0Jw/exec"; // <-- Put your Live Apps Script Web App URL here
         
-        // 📅 ৩ নম্বর রিকোয়ারমেন্ট: ভর্তির তারিখ থেকে ঠিক ১ মাস পার হলে তবেই বকেয়া দেখাবে লজিক
-        function calculateDueMonths(joinDateStr, paidMonths, isPaused) {
-            if (isPaused) return []; // স্টুডেন্ট পজ থাকলে বকেয়া হিসাব হবে না
-
+        function calculateDueMonths(joinDateStr, paidMonths) {
             const start = new Date(joinDateStr);
-            const end = new Date("2026-07-09"); // আপনার বর্তমান সিস্টেম ডেট
+            const end = new Date("2026-07-09");
             const dueMonths = [];
-            
-            let current = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+            let current = new Date(start.getFullYear(), start.getMonth(), 1);
             const monthsName = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            
-            while (true) {
-                // পরবর্তী মাসের সেই একই ডেট হিসাব করা হচ্ছে (উদা: ৯ জুলাই থেকে ৯ আগস্ট)
-                let nextMonthDate = new Date(current.getFullYear(), current.getMonth() + 1, current.getDate());
-                
-                // যদি আজকের ডেট পরবর্তী মাসের সেই নির্দিষ্ট ডেট পার করে যায়, তবেই আগের মাসটি বকেয়া হবে
-                if (nextMonthDate <= end) {
-                    let mName = monthsName[current.getMonth()] + " " + current.getFullYear();
-                    if (!paidMonths.includes(mName)) {
-                        dueMonths.push(mName);
-                    }
-                    current.setMonth(current.getMonth() + 1);
-                } else {
-                    break;
-                }
+            while (current <= end) {
+                let mName = monthsName[current.getMonth()] + " " + current.getFullYear();
+                if (!paidMonths.includes(mName)) dueMonths.push(mName);
+                current.setMonth(current.getMonth() + 1);
             }
             return dueMonths;
         }
@@ -74,51 +59,27 @@
             fetch(`${GOOGLE_APP_URL}?action=getStudentsWithPayments`).then(res => res.json()).then(students => {
                 document.getElementById('loader').classList.add('hidden');
                 const tbody = document.getElementById('paymentTableBody');
-                
                 tbody.innerHTML = students.map(s => {
-                    // লোকাল স্টোরেজ থেকে পজ স্টেট চেক করা হচ্ছে
-                    const isPaused = localStorage.getItem(`paused_${s.mobile}`) === 'true';
-                    
-                    const dueList = calculateDueMonths(s.joinDate, s.paidMonths, isPaused);
+                    const dueList = calculateDueMonths(s.joinDate, s.paidMonths);
                     const totalDueAmount = dueList.length * Number(s.fee);
-                    
-                    let dueBadges = "";
-                    if (isPaused) {
-                        dueBadges = `<span class="text-amber-600 bg-amber-50 text-xs px-2.5 py-1 rounded-md font-bold border border-amber-200"><i class="fa-solid fa-pause mr-1"></i> Account Paused</span>`;
-                    } else {
-                        dueBadges = dueList.length > 0
-                            ? dueList.map(m => `<span class="bg-rose-50 text-rose-600 text-[11px] font-bold px-2 py-0.5 rounded border border-rose-100 mr-1 mb-1 inline-block">${m}</span>`).join('')
-                            : `<span class="text-emerald-600 bg-emerald-50 text-xs px-2.5 py-1 rounded-md font-bold"><i class="fa-solid fa-circle-check"></i> Account Clear</span>`;
-                    }
-
+                    let dueBadges = dueList.length > 0
+                        ? dueList.map(m => `<span class="bg-rose-50 text-rose-600 text-[11px] font-bold px-2 py-0.5 rounded border border-rose-100 mr-1 mb-1 inline-block">${m}</span>`).join('')
+                        : `<span class="text-emerald-600 bg-emerald-50 text-xs px-2.5 py-1 rounded-md font-bold"><i class="fa-solid fa-circle-check"></i> Account Clear</span>`;
                     return `
-                        <tr class="hover:bg-slate-50/50 ${isPaused ? 'opacity-70 bg-slate-50' : ''}">
+                        <tr class="hover:bg-slate-50/50">
                             <td class="p-4"><div class="font-bold text-slate-800">${s.name}</div><div class="text-xs text-slate-400">${s.batch} | ${s.mobile}</div></td>
                             <td class="p-4 font-bold text-slate-600">₹${s.fee}</td>
                             <td class="p-4 max-w-xs sm:max-w-md">${dueBadges}</td>
                             <td class="p-4 font-bold ${totalDueAmount > 0 ? 'text-rose-600' : 'text-emerald-600'}">₹${totalDueAmount}</td>
                             <td class="p-4 text-center">
                                 <div class="flex items-center justify-center gap-2">
-                                    ${dueList.length > 0 && !isPaused ? `<button onclick="payOldestMonth('${s.mobile}', '${s.name}', '${dueList[0]}', ${s.fee})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-xl transition-all shadow-sm">Recover 1 Month</button>` : `<span class="text-xs text-slate-400 font-bold bg-slate-100 px-2.5 py-1 rounded-xl">${isPaused ? 'Paused' : 'Paid'}</span>`}
-                                    
-                                    <button onclick="togglePauseStudent('${s.mobile}', '${s.name}', ${isPaused})" class="text-xs px-3 py-1.5 rounded-xl transition-all font-bold ${isPaused ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-amber-100 text-amber-700 hover:bg-amber-600 hover:text-white'}">
-                                        ${isPaused ? '<i class="fa-solid fa-play"></i> Resume' : '<i class="fa-solid fa-pause"></i> Pause'}
-                                    </button>
+                                    ${dueList.length > 0 ? `<button onclick="payOldestMonth('${s.mobile}', '${s.name}', '${dueList[0]}', ${s.fee})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-xl transition-all shadow-sm">Recover 1 Month</button>` : `<span class="text-xs text-slate-400 font-bold bg-slate-100 px-2.5 py-1 rounded-xl">Paid</span>`}
+                                    <button onclick="deleteStudentProfile('${s.mobile}', '${s.name}')" class="bg-rose-100 hover:bg-rose-600 text-rose-600 hover:text-white text-xs px-3 py-1.5 rounded-xl transition-all"><i class="fa-solid fa-trash-can"></i></button>
                                 </div>
                             </td>
                         </tr>`;
                 }).join('');
             });
-        }
-
-        // ⏸️ পজ টগল করার ফাংশন
-        function togglePauseStudent(mobile, name, currentStatus) {
-            const actionText = currentStatus ? "পুনরায় চালু (Resume)" : "সাময়িক বন্ধ (Pause)";
-            if(confirm(`আপনি কি নিশ্চিতভাবে "${name}" এর অ্যাকাউন্টটি ${actionText} করতে চান?`)) {
-                localStorage.setItem(`paused_${mobile}`, !currentStatus);
-                alert(`স্টুডেন্ট অ্যাকাউন্টটি সফলভাবে ${currentStatus ? 'চালু' : 'বন্ধ'} করা হয়েছে!`);
-                loadPaymentTracker();
-            }
         }
 
         function payOldestMonth(mobile, name, targetMonthYear, fee) {
@@ -127,7 +88,21 @@
                 fetch(GOOGLE_APP_URL, {
                     method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ action: "submitPayment", mobile: mobile, month: targetMonthYear.split(" ")[0], year: targetMonthYear.split(" ")[1], amount: fee, name: name })
-                }).then(() => { alert("Ledger item committed! ✅"); loadPaymentTracker(); });
+                }).then(() => { alert("Ledger item committed! Automation text routed via background. ✅"); loadPaymentTracker(); });
+            }
+        }
+
+        // 🗑️ ছাত্র ডিলিট করার ফ্রন্টএন্ড ফাংশন
+        function deleteStudentProfile(mobile, name) {
+            if(confirm(`WARNING! Are you sure you want to completely delete student "${name}"?\nThis will remove their profile and ALL past payment history from Google Sheet permanently.`)) {
+                document.getElementById('loader').classList.remove('hidden');
+                fetch(GOOGLE_APP_URL, {
+                    method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "deleteStudent", mobile: mobile })
+                }).then(() => { 
+                    alert(`Student "${name}" and all historical dues have been successfully purged from the database. ✅`); 
+                    loadPaymentTracker(); 
+                });
             }
         }
 
