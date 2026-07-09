@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - EduManager Pro</title>
+    <title>Login - Pathshala coaching centre</title>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4f46e5">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -13,7 +16,7 @@
             <div class="w-16 h-16 bg-indigo-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg mb-3">
                 <i class="fa-solid fa-graduation-cap text-3xl text-white"></i>
             </div>
-            <h1 class="text-xl font-bold text-white tracking-wide">EduManager Pro</h1>
+            <h1 class="text-xl font-bold text-white tracking-wide">Pathshala</h1>
             <p class="text-xs text-slate-400 mt-1">Authorized Access Only</p>
         </div>
         <button onclick="loginWithFingerprint()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-2xl shadow-lg transition-all flex items-center justify-center space-x-2 text-sm mb-4">
@@ -45,5 +48,15 @@
             else { document.getElementById('errorMsg').classList.remove('hidden'); }
         });
     </script>
+    <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then((reg) => console.log('Service Worker Registered Setup Success! ✅', reg.scope))
+        .catch((err) => console.log('Service Worker Register Failed! ❌', err));
+    });
+  }
+</script>
+
 </body>
 </html>
