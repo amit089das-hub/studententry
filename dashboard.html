@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pathshala coaching centre</title>
-    <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#4f46e5">
-
+    <title>Dashboard - Pathshala</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="text-slate-800 antialiased flex flex-col md:flex-row min-h-screen bg-slate-50">
 
-    <!-- 📊 SIDEBAR NAVIGATION -->
+    <link class="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+
     <aside class="w-full md:w-64 bg-slate-900 text-slate-200 flex flex-col shadow-xl">
         <div class="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center"><span class="text-xl font-bold text-indigo-400">Pathshala</span></div>
         <nav class="p-4 space-y-1.5 flex-1">
@@ -27,10 +26,8 @@
         </nav>
     </aside>
 
-    <!-- 💻 MAIN INTERFACE -->
     <main class="flex-1 p-4 md:p-8 space-y-6">
         
-        <!-- TOP HEADER WITH COUNTER STATS -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
                 <div><p class="text-xs font-bold text-slate-400 uppercase">Active Students</p><h2 id="statActive" class="text-2xl font-bold text-slate-900 mt-1">0</h2></div>
@@ -40,13 +37,17 @@
                 <div><p class="text-xs font-bold text-slate-400 uppercase">Total Collected</p><h2 id="statCollected" class="text-2xl font-bold text-emerald-600 mt-1">₹0</h2></div>
                 <div class="w-12 h-12 bg-emerald-50 text-emerald-600 flex items-center justify-center rounded-xl text-lg font-bold"><i class="fa-solid fa-wallet"></i></div>
             </div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-                <div><p class="text-xs font-bold text-slate-400 uppercase">Total Outstanding Due</p><h2 id="statDue" class="text-2xl font-bold text-rose-600 mt-1">₹0</h2></div>
-                <div class="w-12 h-12 bg-rose-50 text-rose-600 flex items-center justify-center rounded-xl text-lg font-bold"><i class="fa-solid fa-clock-history"></i></div>
+            
+            <div onclick="openDueDefaultersModal()" class="bg-white p-5 rounded-2xl border border-rose-200 shadow-sm flex items-center justify-between cursor-pointer hover:bg-rose-50/40 transition-all group">
+                <div>
+                    <p class="text-xs font-bold text-rose-500 uppercase tracking-wide">Total Outstanding Due ⬀</p>
+                    <h2 id="statDue" class="text-2xl font-bold text-rose-600 mt-1">₹0</h2>
+                    <p class="text-[10px] text-slate-400 mt-0.5 group-hover:text-rose-600 transition-all font-medium">Click to view Batch-wise Defaulters</p>
+                </div>
+                <div class="w-12 h-12 bg-rose-50 group-hover:bg-rose-600 group-hover:text-white text-rose-600 flex items-center justify-center rounded-xl text-lg font-bold transition-all"><i class="fa-solid fa-clock-history"></i></div>
             </div>
         </div>
 
-        <!-- 🔍 LIVE ADVANCED SEARCH SECTION -->
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <div>
                 <h3 class="text-base font-bold text-slate-900">Search Student Ledger & Financial Dues</h3>
@@ -58,26 +59,20 @@
                 <div id="searchLoader" class="absolute right-4 top-3.5 text-indigo-600 text-sm hidden"><i class="fa-solid fa-spinner animate-spin"></i></div>
             </div>
 
-            <!-- SEARCH RESULTS CONSOLE -->
-            <div id="searchResults" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden pt-2">
-                <!-- dynamic cards injection point -->
-            </div>
+            <div id="searchResults" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden pt-2"></div>
         </div>
 
-        <!-- BATCH DISTRIBUTION REPORT -->
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <div><h3 class="text-base font-bold text-slate-900">Batch Wise Distribution</h3><p class="text-xs text-slate-400 mt-0.5">Real-time student allocations per batch matrix</p></div>
             <div id="batchReportContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
         </div>
     </main>
 
-    <!-- 📝 QUICK PROFILE EDIT MODAL (নাম, মোবাইল এবং নতুন মান্থলি ফি সহ) -->
     <div id="editModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-slate-200">
             <h3 class="text-lg font-bold text-slate-900 mb-4"><i class="fa-solid fa-user-gear text-indigo-600 mr-2"></i>Edit Student Profile</h3>
             <input type="hidden" id="editOldMobile">
             <input type="hidden" id="editBatch">
-            
             <div class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Student Name</label>
@@ -87,13 +82,11 @@
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Mobile Number</label>
                     <input type="text" id="editMobile" class="w-full px-4 py-2 border rounded-xl text-sm font-mono focus:outline-indigo-600">
                 </div>
-                <!-- 💰 ড্যাশবোর্ডে নতুন মান্থলি ফি এডিট এর অপশন -->
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Monthly Fee (₹)</label>
                     <input type="number" id="editFee" class="w-full px-4 py-2 border rounded-xl text-sm font-bold text-slate-700 focus:outline-indigo-600">
                 </div>
             </div>
-            
             <div class="flex justify-end gap-2 mt-6">
                 <button onclick="closeEditModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">Cancel</button>
                 <button onclick="submitStudentEdit()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md">Save Changes</button>
@@ -101,12 +94,26 @@
         </div>
     </div>
 
-    <script>
-        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbwQ7znCpKyOcdsQeRSa0ow3vpt9vjuYbex_T3fwc0gdmbM3Ow_sPlLNt-w6Kzi-llk1lw/exec";
-        let globalStudentsList = [];
-        const TARGET_DATE = new Date("2026-07-09"); // আপনার বর্তমান সিস্টেম ডেট
+    <div id="defaultersModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-md hidden flex items-center justify-center p-4 z-40">
+        <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[85vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+            <div class="p-5 bg-rose-600 text-white flex justify-between items-center shadow-md">
+                <div>
+                    <h3 class="text-lg font-bold"><i class="fa-solid fa-receipt mr-2"></i>Batch-Wise Dues & Outstanding Summary</h3>
+                    <p class="text-xs opacity-90">Showing students with generated pending bills</p>
+                </div>
+                <button onclick="closeDueDefaultersModal()" class="bg-rose-700 hover:bg-rose-800 text-white w-9 h-9 flex items-center justify-center rounded-xl transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-6 bg-slate-50/50 flex-1" id="defaultersModalBody">
+                </div>
+        </div>
+    </div>
 
-        // 🚀 INITIAL BOOTLOADER
+    <script>
+        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbycYxW8-74lwzoKRai9nCSoXfPxIM63mqQ9v_FSuCL9CBCOhHndYmFddbTPgYK1MP8Z/exec";
+        let globalStudentsList = [];
+        const TARGET_DATE = new Date("2026-07-09"); // কারেন্ট সিস্টেম টাইম
+
         window.addEventListener('DOMContentLoaded', () => {
             fetchDashboardStats();
             fetchBatchReport();
@@ -140,17 +147,39 @@
             });
         }
 
-        // 🔍 LIVE SEARCH ENGINE + LIVE DUE CALCULATOR
+        // 📅 কমন বকেয়া মাস ও টাকা ক্যালকুলেটর ফাংশন
+        function calculateDueReport(student) {
+            let dueMonths = [];
+            let joinDate = new Date(student.joinDate);
+            if (!isNaN(joinDate.getTime())) {
+                let start = new Date(joinDate.getFullYear(), joinDate.getMonth(), joinDate.getDate());
+                while (true) {
+                    let nextMonthDate = new Date(start.getFullYear(), start.getMonth() + 1, start.getDate());
+                    if (nextMonthDate <= TARGET_DATE) {
+                        let mName = start.toLocaleString('default', { month: 'long' });
+                        let yName = start.getFullYear();
+                        dueMonths.push(`${mName} ${yName}`);
+                        start.setMonth(start.getMonth() + 1);
+                    } else {
+                        break;
+                    }
+                }
+            }
+            let pendingMonths = dueMonths.filter(m => !student.paidMonths.includes(m));
+            return {
+                pendingMonths: pendingMonths,
+                duesCount: pendingMonths.length,
+                totalDuesAmount: pendingMonths.length * student.fee
+            };
+        }
+
+        // 🔍 LIVE SEARCH ENGINE
         function handleSearch() {
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
             const resultsBox = document.getElementById('searchResults');
-            
             if(!query) { resultsBox.innerHTML = ""; resultsBox.classList.add('hidden'); return; }
             
-            const filtered = globalStudentsList.filter(s => 
-                s.name.toLowerCase().includes(query) || s.mobile.toString().includes(query)
-            );
-
+            const filtered = globalStudentsList.filter(s => s.name.toLowerCase().includes(query) || s.mobile.toString().includes(query));
             if(filtered.length === 0) {
                 resultsBox.innerHTML = `<div class="col-span-full text-center p-6 text-xs font-bold text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">No matching active student profiles found!</div>`;
                 resultsBox.classList.remove('hidden');
@@ -158,29 +187,7 @@
             }
 
             resultsBox.innerHTML = filtered.map(student => {
-                let dueMonths = [];
-                let joinDate = new Date(student.joinDate);
-                
-                if (!isNaN(joinDate.getTime())) {
-                    let start = new Date(joinDate.getFullYear(), joinDate.getMonth(), joinDate.getDate());
-                    
-                    while (true) {
-                        let nextMonthDate = new Date(start.getFullYear(), start.getMonth() + 1, start.getDate());
-                        if (nextMonthDate <= TARGET_DATE) {
-                            let mName = start.toLocaleString('default', { month: 'long' });
-                            let yName = start.getFullYear();
-                            dueMonths.push(`${mName} ${yName}`);
-                            start.setMonth(start.getMonth() + 1);
-                        } else {
-                            break;
-                        }
-                    }
-                }
-
-                let pendingMonths = dueMonths.filter(m => !student.paidMonths.includes(m));
-                let duesCount = pendingMonths.length;
-                let totalDuesAmount = duesCount * student.fee;
-
+                let dueReport = calculateDueReport(student);
                 return `
                     <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col justify-between hover:shadow-md transition-all">
                         <div class="space-y-3">
@@ -191,44 +198,131 @@
                                 </div>
                                 <span class="bg-indigo-50 text-indigo-600 text-[11px] font-bold px-2.5 py-1 rounded-md">${student.batch}</span>
                             </div>
-                            
                             <div class="bg-white border rounded-xl p-3 flex justify-between text-xs font-bold">
                                 <span class="text-slate-400">Monthly Fee:</span>
                                 <span class="text-indigo-600">₹${student.fee}/-</span>
                             </div>
-
                             <div class="bg-white border rounded-xl p-3 space-y-1.5">
                                 <div class="flex justify-between text-xs font-bold">
                                     <span class="text-slate-400">Outstanding Dues:</span>
-                                    <span class="${totalDuesAmount > 0 ? 'text-rose-600' : 'text-emerald-600'}">₹${totalDuesAmount}/- (${duesCount} Months)</span>
+                                    <span class="${dueReport.totalDuesAmount > 0 ? 'text-rose-600' : 'text-emerald-600'}">₹${dueReport.totalDuesAmount}/- (${dueReport.duesCount} Months)</span>
                                 </div>
-                                ${duesCount > 0 ? `
-                                <div class="text-[11px] text-rose-500 font-semibold bg-rose-50/50 p-2 rounded-lg border border-rose-100 leading-relaxed">
-                                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> <strong>Baki Months:</strong> ${pendingMonths.join(', ')}
-                                </div>` : `<div class="text-[11px] text-emerald-600 font-semibold bg-emerald-50/50 p-2 rounded-lg border border-emerald-100"><i class="fa-solid fa-circle-check mr-1"></i> All tuition bills cleared!</div>`}
+                                ${dueReport.duesCount > 0 ? `<div class="text-[11px] text-rose-500 font-semibold bg-rose-50/50 p-2 rounded-lg border border-rose-100 leading-relaxed"><strong>Baki:</strong> ${dueReport.pendingMonths.join(', ')}</div>` : `<div class="text-[11px] text-emerald-600 font-semibold bg-emerald-50/50 p-2 rounded-lg border border-emerald-100">Bills cleared!</div>`}
                             </div>
                         </div>
-
-                        <!-- 🛠️ এডিট এবং ডিলিট অ্যাকশন বাটনসমূহ (Fee সহ পাঠানো হলো) -->
                         <div class="flex gap-2 mt-4 pt-3 border-t border-slate-200/60">
-                            <button onclick="openEditModal('${student.mobile}', '${student.name}', '${student.batch}', '${student.fee}')" class="flex-1 bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white font-bold text-xs py-2 rounded-xl transition-all text-center"><i class="fa-solid fa-pen mr-1"></i> Edit Profile</button>
-                            <button onclick="deleteStudentProfile('${student.mobile}', '${student.name}')" class="flex-1 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-xs py-2 rounded-xl transition-all text-center"><i class="fa-solid fa-trash mr-1"></i> Delete Student</button>
+                            <button onclick="openEditModal('${student.mobile}', '${student.name}', '${student.batch}', '${student.fee}')" class="flex-1 bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white font-bold text-xs py-2 rounded-xl transition-all text-center"><i class="fa-solid fa-pen mr-1"></i> Edit</button>
+                            <button onclick="deleteStudentProfile('${student.mobile}', '${student.name}')" class="flex-1 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-xs py-2 rounded-xl transition-all text-center"><i class="fa-solid fa-trash mr-1"></i> Delete</button>
                         </div>
                     </div>`;
             }).join('');
             resultsBox.classList.remove('hidden');
         }
 
-        // 📝 MODAL LOGIC FOR LIVE DASHBOARD EDIT (Fee যুক্ত করা হয়েছে)
+        // 🚨 📑 BATCH WISE DEFAULTERS LIST GENERATOR (মেন লজিক)
+        function openDueDefaultersModal() {
+            const body = document.getElementById('defaultersModalBody');
+            body.innerHTML = `<div class="text-center p-6 text-sm text-slate-500 font-semibold"><i class="fa-solid fa-spinner animate-spin mr-2 text-rose-600"></i>Sorting and grouping dues matrix...</div>`;
+            document.getElementById('defaultersModal').classList.remove('hidden');
+
+            // ১. শুধু যাদের ডিউ আছে তাদের ফিল্টার করা
+            let defaulters = globalStudentsList.map(s => {
+                return { ...s, dueReport: calculateDueReport(s) };
+            }).filter(s => s.dueReport.totalDuesAmount > 0);
+
+            if(defaulters.length === 0) {
+                body.innerHTML = `<div class="text-center p-12 text-slate-400 font-bold bg-white rounded-2xl border border-dashed">Great news! ✅ 100% tuition dues cleared across all batches!</div>`;
+                return;
+            }
+
+            // ২. ব্যাচ অনুযায়ী গ্রুপ/আলাদা করা
+            let batchGroups = {};
+            defaulters.forEach(s => {
+                if(!batchGroups[s.batch]) batchGroups[s.batch] = [];
+                batchGroups[s.batch].push(s);
+            });
+
+            // ৩. HTML জেনারেট করা
+            let html = "";
+            for (let batchName in batchGroups) {
+                html += `
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="bg-slate-100 px-5 py-3 border-b border-slate-200 flex justify-between items-center">
+                        <span class="font-black text-slate-700 uppercase tracking-wider text-xs"><i class="fa-solid fa-cubes text-indigo-500 mr-2"></i>${batchName}</span>
+                        <span class="bg-rose-100 text-rose-700 text-[11px] font-black px-2.5 py-0.5 rounded-full">${batchGroups[batchName].length} Students Pending</span>
+                    </div>
+                    <div class="divide-y divide-slate-100">
+                        ${batchGroups[batchName].map(s => `
+                        <div class="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-slate-50/50 transition-all">
+                            <div>
+                                <h5 class="font-bold text-slate-900 text-sm">${s.name}</h5>
+                                <p class="text-xs text-slate-400 font-mono mt-0.5">${s.mobile} | <span class="text-rose-600 font-bold">₹${s.dueReport.totalDuesAmount} Due</span></p>
+                            </div>
+                            
+                            <div class="w-full sm:w-auto flex flex-wrap gap-2">
+                                ${s.dueReport.pendingMonths.map(month => `
+                                <div class="bg-slate-50 border rounded-lg px-2.5 py-1 flex items-center gap-2 text-[11px] font-bold">
+                                    <span class="text-slate-600">${month}</span>
+                                    <button onclick="inlineProcessPayment('${s.mobile}', '${month}', '${s.fee}', '${s.name}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-0.5 rounded text-[10px] transition-all">Pay</button>
+                                    <button onclick="inlineProcessWaive('${s.mobile}', '${month}', '${s.name}')" class="bg-amber-100 hover:bg-amber-600 hover:text-white text-amber-700 px-2 py-0.5 rounded text-[10px] transition-all">Waive</button>
+                                </div>`).join('')}
+                            </div>
+                        </div>`).join('')}
+                    </div>
+                </div>`;
+            }
+            body.innerHTML = html;
+        }
+
+        function closeDueDefaultersModal() { document.getElementById('defaultersModal').classList.add('hidden'); }
+
+        // ⚡ ইনলাইন কুইক পেমেন্ট রিসিভ
+        function inlineProcessPayment(mobile, targetMonthYear, fee, name) {
+            if(confirm(`আপনি কি "${name}" এর "${targetMonthYear}" মাসের ₹${fee} টাকা ফি রিসিভ করেছেন?`)) {
+                closeDueDefaultersModal();
+                document.getElementById('searchLoader').classList.remove('hidden');
+                fetch(GOOGLE_APP_URL, {
+                    method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "submitPayment", mobile: mobile, month: targetMonthYear.split(" ")[0], year: targetMonthYear.split(" ")[1], amount: fee, name: name })
+                }).then(() => { 
+                    alert("পেমেন্ট সফলভাবে জমা হয়েছে! ✅"); 
+                    reloadEverything();
+                });
+            }
+        }
+
+        // ⚡ ইনলাইন কুইক পেমেন্ট মওকুফ (Waive)
+        function inlineProcessWaive(mobile, targetMonthYear, name) {
+            if(confirm(`আপনি কি নিশ্চিতভাবে "${name}" এর "${targetMonthYear}" মাসের বিল সম্পূর্ণ মওকুফ (Wave off) করতে চান?`)) {
+                closeDueDefaultersModal();
+                document.getElementById('searchLoader').classList.remove('hidden');
+                fetch(GOOGLE_APP_URL, {
+                    method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "submitPayment", mobile: mobile, month: targetMonthYear.split(" ")[0], year: targetMonthYear.split(" ")[1], amount: 0, name: name })
+                }).then(() => { 
+                    alert(`"${name}" এর "${targetMonthYear}" মাসের মাইনে মওকুফ করা হয়েছে! 🎁`); 
+                    reloadEverything();
+                });
+            }
+        }
+
+        function reloadEverything() {
+            document.getElementById('searchInput').value = "";
+            handleSearch();
+            preloadStudentsCache();
+            fetchDashboardStats();
+            fetchBatchReport();
+        }
+
+        // 📝 MODAL LOGIC FOR LIVE DASHBOARD EDIT
         function openEditModal(mobile, name, batch, fee) {
             document.getElementById('editOldMobile').value = mobile;
             document.getElementById('editName').value = name;
             document.getElementById('editMobile').value = mobile;
             document.getElementById('editBatch').value = batch;
-            document.getElementById('editFee').value = fee; // কারেন্ট ফি বক্সে শো করবে
+            document.getElementById('editFee').value = fee;
             document.getElementById('editModal').classList.remove('hidden');
         }
-
         function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
 
         function submitStudentEdit() {
@@ -243,43 +337,18 @@
             document.getElementById('searchLoader').classList.remove('hidden');
 
             fetch(GOOGLE_APP_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ 
-                    action: "updateStudentProfile", 
-                    oldMobile: oldMobile, 
-                    newMobile: newMobile, 
-                    name: newName, 
-                    batch: batch, 
-                    fee: newFee // নতুন ফি গুগল শিটে সাবমিট হবে
-                })
-            }).then(() => {
-                alert("স্টুডেন্টের প্রোফাইল ও মান্থলি ফি সফলভাবে আপডেট হয়েছে! ✅");
-                document.getElementById('searchInput').value = "";
-                handleSearch();
-                preloadStudentsCache();
-                fetchDashboardStats();
-            });
+                method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "updateStudentProfile", oldMobile: oldMobile, newMobile: newMobile, name: newName, batch: batch, fee: newFee })
+            }).then(() => { alert("স্টুডেন্ট ডাটা সফলভাবে এডিট হয়েছে! ✅"); reloadEverything(); });
         }
 
-        // 🗑️ INLINE DELETE LOGIC
         function deleteStudentProfile(mobile, name) {
-            if(confirm(`আপনি কি ড্যাশবোর্ড থেকে সরাসরি "${name}"-কে ডিলিট করতে চান?\nগুগল শিটের 'Students' ও 'Payments' হিস্ট্রি থেকে সম্পূর্ণ ডাটা ডিলেট হবে!`)) {
+            if(confirm(`আপনি কি ড্যাশবোর্ড থেকে সরাসরি "${name}"-কে ডিলিট করতে চান?`)) {
                 document.getElementById('searchLoader').classList.remove('hidden');
                 fetch(GOOGLE_APP_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
+                    method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ action: "deleteStudent", mobile: mobile })
-                }).then(() => {
-                    alert(`"${name}" এর সব রেকর্ড সফলভাবে ডাটাবেজ থেকে ডিলেট হয়েছে। ✅`);
-                    document.getElementById('searchInput').value = "";
-                    handleSearch();
-                    preloadStudentsCache();
-                    fetchDashboardStats();
-                    fetchBatchReport();
-                });
+                }).then(() => { alert(`"${name}" এর রেকর্ড মুছে ফেলা হয়েছে। ✅`); reloadEverything(); });
             }
         }
     </script>
