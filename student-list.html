@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Roster - Pathshala coaching centre</title>
+    <title>Student Roster - Pathshala</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="text-slate-800 antialiased flex flex-col md:flex-row min-h-screen bg-slate-50">
-    
+
     <aside class="w-full md:w-64 bg-slate-900 text-slate-200 flex flex-col shadow-xl">
         <div class="p-5 bg-slate-950 border-b border-slate-800 flex justify-between items-center"><span class="text-xl font-bold text-indigo-400">Pathshala</span></div>
         <nav class="p-4 space-y-1.5 flex-1">
@@ -24,35 +24,33 @@
     </aside>
 
     <main class="flex-1 p-4 md:p-8 space-y-6">
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex justify-between items-center">
             <div>
-                <h1 class="text-xl font-bold text-slate-900">Master Student Roster</h1>
-                <p class="text-xs text-slate-500 mt-0.5">View profiles, search, and manage structural admission records</p>
+                <h1 class="text-xl font-black text-slate-900 tracking-tight md:text-2xl">Student Ledger Directory</h1>
+                <p class="text-xs text-slate-400 font-medium mt-0.5">Manage details, edit credentials, or change student batches instantly</p>
             </div>
-            <div id="loader" class="text-xs text-indigo-600 font-bold"><i class="fa-solid fa-spinner animate-spin"></i> Fetching Database...</div>
+            <div id="loader" class="text-indigo-600 text-sm font-bold hidden"><i class="fa-solid fa-spinner animate-spin mr-2"></i>Loading Cloud Data...</div>
         </div>
 
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <div class="relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400 text-sm"></i>
-                <input type="text" id="listSearchInput" oninput="filterStudentTable()" placeholder="নাম অথবা মোবাইল নম্বর দিয়ে স্টুডেন্ট সার্চ করুন..." class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 font-medium transition-all">
-            </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <input type="text" id="localSearch" oninput="filterRoster()" placeholder="Quick filter by name or mobile number..." class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 font-medium">
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-sm">
+                <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-slate-50 text-slate-400 font-bold border-b text-xs uppercase">
+                        <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-black uppercase text-slate-400 tracking-wider">
                             <th class="p-4">Student Name</th>
                             <th class="p-4">Mobile Number</th>
                             <th class="p-4">Assigned Batch</th>
                             <th class="p-4">Monthly Fee</th>
                             <th class="p-4">Admission Date</th>
-                            <th class="p-4 text-center">Action</th>
+                            <th class="p-4 text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 font-medium" id="studentTableBody"></tbody>
+                    <tbody id="studentTableBody" class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+                        </tbody>
                 </table>
             </div>
         </div>
@@ -60,10 +58,8 @@
 
     <div id="editModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-slate-200">
-            <h3 class="text-lg font-bold text-slate-900 mb-4"><i class="fa-solid fa-user-gear text-indigo-600 mr-2"></i>Edit Student Profile</h3>
+            <h3 class="text-lg font-bold text-slate-900 mb-4"><i class="fa-solid fa-user-gear text-indigo-600 mr-2"></i>Modify Student Profile</h3>
             <input type="hidden" id="editOldMobile">
-            <input type="hidden" id="editBatch">
-            
             <div class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Student Name</label>
@@ -74,11 +70,15 @@
                     <input type="text" id="editMobile" class="w-full px-4 py-2 border rounded-xl text-sm font-mono focus:outline-indigo-600">
                 </div>
                 <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Select New Batch</label>
+                    <select id="editBatch" class="w-full px-4 py-2 border rounded-xl text-sm font-semibold bg-white focus:outline-indigo-600">
+                        </select>
+                </div>
+                <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Monthly Fee (₹)</label>
                     <input type="number" id="editFee" class="w-full px-4 py-2 border rounded-xl text-sm font-bold text-slate-700 focus:outline-indigo-600">
                 </div>
             </div>
-            
             <div class="flex justify-end gap-2 mt-6">
                 <button onclick="closeEditModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">Cancel</button>
                 <button onclick="submitStudentEdit()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md">Save Changes</button>
@@ -87,128 +87,113 @@
     </div>
 
     <script>
-        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbycYxW8-74lwzoKRai9nCSoXfPxIM63mqQ9v_FSuCL9CBCOhHndYmFddbTPgYK1MP8Z/exec";
-        let globalStudentsArray = []; // গ্লোবাল ক্যাশ মেমোরি সার্চের জন্য
+        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbwIdfYPmdC30B9xJ365rZ_AfEvSqr4xx52QItIKkVqyZ5PL31hD011tiWpAD7NjRvBy/exec";
+        let globalStudentsArray = [];
+        let globalBatchesList = [];
 
-        // 📅 ডেট ফরম্যাট: DD/MM/YY
-        function formatDateToDDMMYY(dateStr) {
-            if(!dateStr) return "-";
-            const date = new Date(dateStr);
-            if(isNaN(date.getTime())) return dateStr;
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = String(date.getFullYear()).slice(-2);
-            return `${day}/${month}/${year}`;
-        }
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStudentRoster();
+            preloadBatches();
+        });
 
         function loadStudentRoster() {
             document.getElementById('loader').classList.remove('hidden');
             fetch(`${GOOGLE_APP_URL}?action=getStudentsWithPayments`).then(res => res.json()).then(students => {
-                globalStudentsArray = students; // ডাটা সেভ রাখা হলো
-                document.getElementById('loader').classList.add('hidden');
+                globalStudentsArray = students;
                 renderTable(globalStudentsArray);
+                document.getElementById('loader').classList.add('hidden');
             });
         }
 
-        // টেবিল রেন্ডার করার কমন ফাংশন
+        function preloadBatches() {
+            fetch(`${GOOGLE_APP_URL}?action=getBatches`).then(res => res.json()).then(data => {
+                globalBatchesList = data;
+            });
+        }
+
         function renderTable(data) {
             const tbody = document.getElementById('studentTableBody');
-            if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center p-6 text-xs text-slate-400 font-bold">কোনো স্টুডেন্ট রেকর্ড পাওয়া যায়নি!</td></tr>`;
+            if(data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">No matching active records found.</td></tr>`;
                 return;
             }
             tbody.innerHTML = data.map(s => `
-                <tr class="hover:bg-slate-50/50">
+                <tr class="hover:bg-slate-50/50 transition-all">
                     <td class="p-4 font-bold text-slate-900">${s.name}</td>
-                    <td class="p-4 font-mono">${s.mobile}</td>
+                    <td class="p-4 font-mono text-xs text-slate-500">${s.mobile}</td>
                     <td class="p-4"><span class="bg-indigo-50 text-indigo-600 text-xs px-2.5 py-1 rounded-md font-semibold">${s.batch}</span></td>
-                    <td class="p-4 font-bold text-indigo-600">₹${s.fee}</td>
-                    <td class="p-4 text-slate-600 font-mono text-xs font-bold">${formatDateToDDMMYY(s.joinDate)}</td>
-                    <td class="p-4 text-center">
-                        <div class="flex justify-center gap-2">
-                            <button onclick="openEditModal('${s.mobile}', '${s.name}', '${s.batch}', '${s.fee}')" class="bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white text-xs px-2.5 py-1.5 rounded-xl transition-all"><i class="fa-solid fa-pen"></i> Edit</button>
-                            <button onclick="deleteStudentProfile('${s.mobile}', '${s.name}')" class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white text-xs px-2.5 py-1.5 rounded-xl transition-all"><i class="fa-solid fa-trash"></i> Delete</button>
-                        </div>
+                    <td class="p-4 font-bold text-slate-600">₹${s.fee}/-</td>
+                    <td class="p-4 text-slate-500 font-mono text-xs font-semibold">${s.joinDate}</td>
+                    <td class="p-4 text-center flex justify-center gap-2">
+                        <button onclick="openEditModal('${s.mobile}', '${s.name}', '${s.batch}', '${s.fee}')" class="bg-amber-50 hover:bg-amber-500 text-amber-600 hover:text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all"><i class="fa-solid fa-pen"></i> Edit</button>
+                        <button onclick="deleteStudentProfile('${s.mobile}', '${s.name}')" class="bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all"><i class="fa-solid fa-trash"></i> Delete</button>
                     </td>
                 </tr>`).join('');
         }
 
-        // 🔍 লাইভ ফিল্টার/সার্চ ফাংশন
-        function filterStudentTable() {
-            const searchText = document.getElementById('listSearchInput').value.toLowerCase().trim();
-            const filteredData = globalStudentsArray.filter(s => 
-                s.name.toLowerCase().includes(searchText) || s.mobile.toString().includes(searchText)
-            );
-            renderTable(filteredData);
+        function filterRoster() {
+            const query = document.getElementById('localSearch').value.toLowerCase().trim();
+            const filtered = globalStudentsArray.filter(s => s.name.toLowerCase().includes(query) || s.mobile.toString().includes(query));
+            renderTable(filtered);
         }
 
-        // 📝 এডিট পপআপ মдাল ওপেন করা
         function openEditModal(mobile, name, batch, fee) {
             document.getElementById('editOldMobile').value = mobile;
             document.getElementById('editName').value = name;
             document.getElementById('editMobile').value = mobile;
-            document.getElementById('editBatch').value = batch;
-            document.getElementById('editFee').value = fee; // কারেন্ট মান্থলি ফি বক্সে সেট হবে
+            document.getElementById('editFee').value = fee;
+            
+            const batchSelect = document.getElementById('editBatch');
+            batchSelect.innerHTML = globalBatchesList.map(bName => `
+                <option value="${bName}" ${bName === batch ? 'selected' : ''}>${bName}</option>
+            `).join('');
+
             document.getElementById('editModal').classList.remove('hidden');
         }
 
-        function closeEditModal() {
-            document.getElementById('editModal').classList.add('hidden');
-        }
+        function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
 
-        // 💾 এডিট করা ডাটা গুগল শিটে পাঠানো (ফি সহ আপডেট হবে)
         function submitStudentEdit() {
             const oldMobile = document.getElementById('editOldMobile').value;
             const newName = document.getElementById('editName').value;
             const newMobile = document.getElementById('editMobile').value;
-            const batch = document.getElementById('editBatch').value;
+            const selectBatch = document.getElementById('editBatch').value;
             const newFee = document.getElementById('editFee').value;
 
-            if(!newName || !newMobile || !newFee) { alert("সবগুলো বক্স সঠিকভাবে পূরণ করুন।"); return; }
-
+            if(!newName || !newMobile || !newFee || !selectBatch) { alert("সবগুলো বক্স সঠিকভাবে পূরণ করুন।"); return; }
             closeEditModal();
             document.getElementById('loader').classList.remove('hidden');
 
             fetch(GOOGLE_APP_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
+                method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
                     action: "updateStudentProfile", 
                     oldMobile: oldMobile, 
                     newMobile: newMobile, 
                     name: newName, 
-                    batch: batch, 
-                    fee: newFee // নতুন ফি পাঠানো হলো ব্যাকএন্ডে
+                    batch: selectBatch, 
+                    fee: newFee 
                 })
-            }).then(() => {
-                alert("স্টুডেন্টের প্রোফাইল এবং মান্থলি ফি সফলভাবে আপডেট হয়েছে! ✅");
-                document.getElementById('listSearchInput').value = ""; // সার্চ রিলিজ
-                loadStudentRoster();
-            }).catch(err => {
-                alert("ত্রুটি দেখা দিয়েছে! আবার চেষ্টা করুন।");
-                document.getElementById('loader').classList.add('hidden');
+            }).then(() => { 
+                alert("স্টুডেন্টের প্রোফাইল ও ব্যাচ সফলভাবে পরিবর্তন হয়েছে! ✅"); 
+                document.getElementById('localSearch').value = "";
+                loadStudentRoster(); 
             });
         }
 
-        // 🗑️ স্টুডেন্ট ডিলিট ফাংশন
         function deleteStudentProfile(mobile, name) {
-            if(confirm(`সাবধান! আপনি কি নিশ্চিতভাবে "${name}"-কে ডিলিট করতে চান?\nগুগল শিট থেকে তার প্রোফাইল এবং পেমেন্ট হিস্ট্রি চিরতরে মুছে যাবে।`)) {
+            if(confirm(`আপনি কি সম্পূর্ণ নিশ্চিতভাবে "${name}"-কে ডিলিট করতে চান?\nএর ফলে গুগল শিট থেকে তার প্রোফাইল এবং অতীতের সকল পেমেন্ট হিস্ট্রি মুছে যাবে!`)) {
                 document.getElementById('loader').classList.remove('hidden');
                 fetch(GOOGLE_APP_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
+                    method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ action: "deleteStudent", mobile: mobile })
-                }).then(() => {
-                    alert(`স্টুডেন্ট "${name}" ডাটাবেজ থেকে মুছে ফেলা হয়েছে। ✅`);
-                    document.getElementById('listSearchInput').value = "";
-                    loadStudentRoster();
+                }).then(() => { 
+                    alert(`"${name}" এর সমস্ত রেকর্ড ডেটাবেস থেকে মুছে ফেলা হয়েছে। ✅`); 
+                    document.getElementById('localSearch').value = "";
+                    loadStudentRoster(); 
                 });
             }
         }
-
-        window.addEventListener('DOMContentLoaded', loadStudentRoster);
     </script>
 </body>
 </html>
