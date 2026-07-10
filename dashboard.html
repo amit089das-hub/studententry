@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Hind Siliguri', sans-serif; }
-        /* স্মুথ স্ক্রলিং এর জন্য কাস্টম স্ক্রলবার */
         .custom-scrollbar::-webkit-scrollbar { height: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -86,7 +85,6 @@
         </div>
     </main>
 
-    <!-- BATCH DETAILS MODAL (মোবাইলের জন্য overflow-x-auto ও custom-scrollbar যুক্ত করে ফিক্স করা হয়েছে) -->
     <div id="batchDetailsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-40">
         <div class="bg-white rounded-2xl w-full max-w-3xl max-h-[80vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
             <div class="p-5 bg-indigo-600 text-white flex justify-between items-center shadow-md">
@@ -136,6 +134,10 @@
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Monthly Fee (₹)</label>
                     <input type="number" id="editFee" class="w-full px-4 py-2 border rounded-xl text-sm font-bold text-slate-700 focus:outline-indigo-600">
                 </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Billing / Joining Date</label>
+                    <input type="date" id="editBillingDate" class="w-full px-4 py-2 border rounded-xl text-sm font-semibold text-slate-700 focus:outline-indigo-600">
+                </div>
             </div>
             <div class="flex justify-end gap-2 mt-6">
                 <button onclick="closeEditModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">Cancel</button>
@@ -144,7 +146,6 @@
         </div>
     </div>
 
-    <!-- DEFAULTERS MODAL (মোবাইলের জন্য এর ভেতরের স্ক্রলিং এরিয়া অপ্টিমাইজ করা হয়েছে) -->
     <div id="defaultersModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-md hidden flex items-center justify-center p-4 z-40">
         <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[85vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
             <div class="p-5 bg-rose-600 text-white flex justify-between items-center shadow-md">
@@ -159,7 +160,7 @@
     </div>
 
     <script>
-        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbweSITsBr61gVkfjLpJd0GJovPDf-kSVuS-iUTIRbhfy_4Eel1sUPQfp2EaHqPdDep8/exec";
+        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbx1-7inWYwDflcy-fuKv4lWz0OZC7d5jgMzH_sPyKf6WUFEJAvcOoBidjTvCYyHkHxa/exec";
         let globalStudentsList = [];
         let globalBatchesList = []; 
         const TARGET_DATE = new Date("2026-07-09"); 
@@ -292,17 +293,17 @@
 
         function handleSearch() {
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
-            const resultsBox = document.getElementById('searchResults');
-            if(!query) { resultsBox.innerHTML = ""; resultsBox.classList.add('hidden'); return; }
+            const fontResultsBox = document.getElementById('searchResults');
+            if(!query) { fontResultsBox.innerHTML = ""; fontResultsBox.classList.add('hidden'); return; }
             
             const filtered = globalStudentsList.filter(s => s.name.toLowerCase().includes(query) || s.mobile.toString().includes(query));
             if(filtered.length === 0) {
-                resultsBox.innerHTML = `<div class="col-span-full text-center p-6 text-xs font-bold text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">No matching active student profiles found!</div>`;
-                resultsBox.classList.remove('hidden');
+                fontResultsBox.innerHTML = `<div class="col-span-full text-center p-6 text-xs font-bold text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">No matching active student profiles found!</div>`;
+                fontResultsBox.classList.remove('hidden');
                 return;
             }
 
-            resultsBox.innerHTML = filtered.map(student => {
+            fontResultsBox.innerHTML = filtered.map(student => {
                 let dueReport = calculateDueReport(student);
                 return `
                     <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col justify-between hover:shadow-md transition-all">
@@ -332,7 +333,7 @@
                         </div>
                     </div>`;
             }).join('');
-            resultsBox.classList.remove('hidden');
+            fontResultsBox.classList.remove('hidden');
         }
 
         function openDueDefaultersModal() {
@@ -370,7 +371,6 @@
                                 <h5 class="font-bold text-slate-900 text-sm">${s.name}</h5>
                                 <p class="text-xs text-slate-400 font-mono mt-0.5">${s.mobile} | <span class="text-rose-600 font-bold">₹${s.dueReport.totalDuesAmount} Due</span></p>
                             </div>
-                            <!-- মোবাইলে ওভারফ্লো যেন না কাটে, তার জন্য স্ক্রল সাপোর্ট -->
                             <div class="w-full sm:w-auto flex flex-nowrap overflow-x-auto pb-1 sm:pb-0 gap-2 custom-scrollbar">
                                 ${s.dueReport.pendingMonths.map(month => `
                                 <div class="bg-slate-50 border rounded-lg px-2.5 py-1 flex items-center gap-2 text-[11px] font-bold whitespace-nowrap">
@@ -418,11 +418,20 @@
             fetchBatchReport();
         }
 
+        // 🎯 openEditModal ফাংশনে অটোমেটিক পুরোনো ডেট লোড করার লজিক যুক্ত
         function openEditModal(mobile, name, batch, fee) {
             document.getElementById('editOldMobile').value = mobile;
             document.getElementById('editName').value = name;
             document.getElementById('editMobile').value = mobile;
             document.getElementById('editFee').value = fee;
+            
+            // গ্লোবাল ক্যাশ থেকে স্টুডেন্টের joinDate সেট করা হচ্ছে
+            const student = globalStudentsList.find(s => s.mobile.toString() === mobile.toString());
+            if(student && student.joinDate) {
+                document.getElementById('editBillingDate').value = student.joinDate;
+            } else {
+                document.getElementById('editBillingDate').value = "";
+            }
             
             const batchSelect = document.getElementById('editBatch');
             batchSelect.innerHTML = globalBatchesList.map(bName => `
@@ -434,14 +443,19 @@
         
         function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
 
+        // 🎯 submitStudentEdit ফাংশনে নতুন তারিখ ব্যাকএন্ডে পাঠানোর ব্যবস্থা করা হয়েছে
         function submitStudentEdit() {
             const oldMobile = document.getElementById('editOldMobile').value;
             const newName = document.getElementById('editName').value;
             const newMobile = document.getElementById('editMobile').value;
             const selectBatch = document.getElementById('editBatch').value; 
             const newFee = document.getElementById('editFee').value;
+            const newBillingDate = document.getElementById('editBillingDate').value; 
 
-            if(!newName || !newMobile || !newFee || !selectBatch) { alert("সবগুলো বক্স সঠিকভাবে পূরণ করুন।"); return; }
+            if(!newName || !newMobile || !newFee || !selectBatch || !newBillingDate) { 
+                alert("সবগুলো বক্স (তারিখ সহ) সঠিকভাবে পূরণ করুন।"); 
+                return; 
+            }
             closeEditModal();
             showActionLoader();
 
@@ -453,9 +467,14 @@
                     newMobile: newMobile, 
                     name: newName, 
                     batch: selectBatch, 
-                    fee: newFee 
+                    fee: newFee,
+                    billingDate: newBillingDate 
                 })
-            }).then(() => { alert("স্টুডেন্টের প্রোফাইল ও ব্যাচ সফলভাবে পরিবর্তন হয়েছে! ✅"); reloadEverything(); hideActionLoader(); }).catch(() => hideActionLoader());
+            }).then(() => { 
+                alert("স্টুডেন্টের প্রোফাইল, ব্যাচ ও জয়েনিং ডেট সফলভাবে পরিবর্তন হয়েছে! ✅"); 
+                reloadEverything(); 
+                hideActionLoader(); 
+            }).catch(() => hideActionLoader());
         }
 
         function deleteStudentProfile(mobile, name) {
